@@ -1,13 +1,54 @@
-import { Story } from '../types/story';
+import { Story, StoryCategory } from '../types/story';
 import clockmakerCover from '../assets/images/clockmaker_tower_1793981214576.jpg';
 import forestFluteCover from '../assets/images/forest_flute_1793981229566.jpg';
 import mayaRobotCover from '../assets/images/maya_robot_1793981243185.jpg';
 import cinnamonLoafCover from '../assets/images/cinnamon_loaf_1793981258154.jpg';
 import cloudKiteCover from '../assets/images/cloud_kite_1793981271109.jpg';
+import seaTurtleCover from '../assets/images/sea_turtle_1794154561537.jpg';
+import auroraWindmillCover from '../assets/images/aurora_windmill_1794154579373.jpg';
+import villagePotterCover from '../assets/images/village_potter_1794154597308.jpg';
+
+export const STORY_CATEGORIES: StoryCategory[] = [
+  {
+    id: 'mystery',
+    titleEn: 'Mystery & Adventure',
+    titleSi: 'අබිරහස් සහ වික්‍රමාන්විත',
+    descriptionSi: 'විස්මිත කුලුනු, පැරණි රහස් සහ අහස සිපගන්නා සරුංගල් කතා',
+    badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
+    coverImage: clockmakerCover,
+  },
+  {
+    id: 'nature',
+    titleEn: 'Nature & Wildlife',
+    titleSi: 'සොබාදහම සහ වනජීවී',
+    descriptionSi: 'ලස්සන ලාංකික වනාන්තර, දඟකාර සතුන් සහ මුහුදු වෙරළේ විස්මයන්',
+    badgeColor: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+    coverImage: forestFluteCover,
+  },
+  {
+    id: 'scifi',
+    titleEn: 'Sci-Fi & Inventions',
+    titleSi: 'විද්‍යා ප්‍රබන්ධ සහ නව නිපැයුම්',
+    descriptionSi: 'මිත්‍රශීලී රොබෝවරු, හිරු බලශක්තිය සහ අනාගත සොයාගැනීම්',
+    badgeColor: 'bg-sky-100 text-sky-900 border-sky-300',
+    coverImage: mayaRobotCover,
+  },
+  {
+    id: 'kindness',
+    titleEn: 'Kindness & Community',
+    titleSi: 'දයාව සහ මිත්‍රත්වය',
+    descriptionSi: 'උණුසුම් බේකරි, ගමේ මිතුරන් සහ බෙදාහදා ගැනීමේ සතුට',
+    badgeColor: 'bg-rose-100 text-rose-900 border-rose-300',
+    coverImage: cinnamonLoafCover,
+  },
+];
 
 export const STORIES: Story[] = [
   {
     id: 'clockmaker-tower',
+    categoryId: 'mystery',
+    categoryTitleEn: '1. Mystery & Adventure',
+    categoryTitleSi: 'අබිරහස් සහ වික්‍රමාන්විත',
     titleEn: "The Secret of the Clockmaker's Tower",
     titleSi: 'ඔරලෝසු සාදන්නාගේ කුලුනේ රහස',
     level: 'Elementary (A2)',
@@ -326,6 +367,9 @@ export const STORIES: Story[] = [
   },
   {
     id: 'elephant-flute',
+    categoryId: 'nature',
+    categoryTitleEn: '2. Nature & Wildlife',
+    categoryTitleSi: 'සොබාදහම සහ වනජීවී',
     titleEn: 'The Whispering Flute of the Teak Forest',
     titleSi: 'තේක්ක වනාන්තරයේ මුමුණන බටනළාව',
     level: 'Intermediate (B1)',
@@ -660,6 +704,9 @@ export const STORIES: Story[] = [
   },
   {
     id: 'valley-robot',
+    categoryId: 'scifi',
+    categoryTitleEn: '3. Sci-Fi & Inventions',
+    categoryTitleSi: 'විද්‍යා ප්‍රබන්ධ සහ නව නිපැයුම්',
     titleEn: 'Maya and the Robot of the Green Valley',
     titleSi: 'මායා සහ හරිත නිම්නයේ රොබෝ මිතුරා',
     level: 'Elementary (A2)',
@@ -961,6 +1008,9 @@ export const STORIES: Story[] = [
   },
   {
     id: 'bakers-bread',
+    categoryId: 'kindness',
+    categoryTitleEn: '4. Kindness & Community',
+    categoryTitleSi: 'දයාව සහ මිත්‍රත්වය',
     titleEn: 'The Baker’s Magic Cinnamon Loaf',
     titleSi: 'බේකරි කරුවාගේ මායා කුරුඳු පාන්',
     level: 'Beginner (A1)',
@@ -1284,6 +1334,9 @@ export const STORIES: Story[] = [
   },
   {
     id: 'cloud-kite',
+    categoryId: 'mystery',
+    categoryTitleEn: '1. Mystery & Adventure',
+    categoryTitleSi: 'අබිරහස් සහ වික්‍රමාන්විත',
     titleEn: 'The Boy Who Built a Kite to the Clouds',
     titleSi: 'වලාකුළු කරා සරුංගලයක් හැදූ පිරිමි ළමයා',
     level: 'Intermediate (B1)',
@@ -1609,5 +1662,928 @@ export const STORIES: Story[] = [
         ]
       }
     ]
+  },
+  {
+    id: 'sea-turtle',
+    categoryId: 'nature',
+    categoryTitleEn: '2. Nature & Wildlife',
+    categoryTitleSi: 'සොබාදහම සහ වනජීවී',
+    titleEn: 'The Little Sea Turtle’s Midnight Journey',
+    titleSi: 'කුඩා මුහුදු කැස්බෑවාගේ මධ්‍යම රාත්‍රී ගමන',
+    level: 'Beginner (A1)',
+    genreEn: 'Ocean & Wildlife Protection',
+    genreSi: 'සාගරය සහ වනජීවී රැකවරණය',
+    estimatedMinutes: 5,
+    coverAccent: '#0284c7',
+    coverImage: seaTurtleCover,
+    theme: 'nature',
+    quiz: [
+      {
+        id: 'st-q1',
+        questionEn: 'Where was baby turtle Sam born?',
+        questionSi: 'සෑම් නම් කුඩා කැස්බෑ පැටියා උපත ලැබුවේ කොහේද?',
+        options: ['Beneath the soft golden sand of a tropical beach', 'In a quiet freshwater river lake', 'On a cold mountain cliff'],
+        optionsSi: ['ඝර්මකලාපීය වෙරළක මෘදු රන්වන් වැලි යට', 'නිස්කලංක මිරිදිය ගංගා විලක', 'සීතල කඳු බෑවුමක'],
+        correctIndex: 0,
+        explanationSi: 'කතාවේ සඳහන් වන්නේ සෑම් ඝර්මකලාපීය වෙරළක මෘදු රන්වන් වැලි යට බිත්තරයෙන් එළියට ආ බවයි.'
+      },
+      {
+        id: 'st-q2',
+        questionEn: 'What guided Sam safely to the ocean waves?',
+        questionSi: 'සෑම්ව සාගර රළ දෙසට ආරක්ෂිතව යොමු කළේ කුමක්ද?',
+        options: ['The gentle sea breeze and the rhythmic sound of crashing waves', 'A bright ship lighthouse horn', 'The morning warm sunshine'],
+        optionsSi: ['මෘදු මුහුදු සුළඟ සහ රළ බිඳෙන රිද්මයානුකූල ශබ්දය', 'නැවක ප්‍රදීපාගාර නළා හඬ', 'උදෑසන උණුසුම් හිරු එළිය'],
+        correctIndex: 0,
+        explanationSi: 'මුහුදු සුළඟ සහ රළ පහරේ රිද්මය ඔහුව සාගරය දෙසට නිවැරදිව මඟ පෙන්වීය.'
+      }
+    ],
+    chapters: [
+      {
+        id: 'st-ch1',
+        chapterNumber: 1,
+        titleEn: 'The Whispering Golden Sand',
+        titleSi: 'රන්වන් වෙරළේ උපත',
+        subtitleEn: 'A tiny turtle enters the moonlight',
+        subtitleSi: 'පුරසඳ එළියට එබෙන කුඩා කැස්බෑ පැටියා',
+        summaryEn: 'Under a shining tropical full moon, a newborn sea turtle named Sam breaks out of his egg on a warm Sri Lankan beach.',
+        summarySi: 'ශ්‍රී ලංකාවේ දකුණු වෙරළක පුරසඳ එළිය යටතේ, සෑම් නම් කුඩා කැස්බෑ පැටියා බිත්තරයෙන් එළියට පැමිණෙයි.',
+        funFactEn: 'Baby sea turtles find the ocean by crawling toward the brightest horizon, which is the reflection of moonlight on the water!',
+        funFactSi: 'මුහුදු කැස්බෑ පැටවුන් සාගරය සොයාගන්නේ ජලය මත පතිත වන සඳ එළියේ දීප්තිය ඔස්සේ ගමන් කිරීමෙනි!',
+        keyVocabulary: [
+          { word: 'turtle', phonetic: '/ˈtɜːtl/', sinhalaMeaning: 'කැස්බෑවා', englishDefinition: 'A marine reptile with a bony shell', partOfSpeech: 'noun' },
+          { word: 'flippers', phonetic: '/ˈflɪpəz/', sinhalaMeaning: 'පිහිනන වරල්', englishDefinition: 'Broad flat limbs adapted for swimming', partOfSpeech: 'noun' },
+          { word: 'crawled', phonetic: '/krɔːld/', sinhalaMeaning: 'බඩගාගෙන ගියා', englishDefinition: 'Moved slowly along the ground', partOfSpeech: 'verb' },
+          { word: 'surface', phonetic: '/ˈsɜːfɪs/', sinhalaMeaning: 'මතුපිට', englishDefinition: 'The outside or top layer of something', partOfSpeech: 'noun' },
+          { word: 'diamonds', phonetic: '/ˈdaɪəməndz/', sinhalaMeaning: 'දියමන්ති', englishDefinition: 'Precious sparkling bright gems', partOfSpeech: 'noun' }
+        ],
+        sentences: [
+          {
+            id: 'st1-1',
+            englishText: 'Under the silver light of a tropical full moon, a warm southern beach lay quiet and peaceful.',
+            sinhalaTranslation: 'ඝර්මකලාපීය පුරසඳේ රිදී ආලෝකය යටතේ, උණුසුම් දකුණු වෙරළ තීරයක් නිස්කලංකව පැවතුණා.',
+            words: [
+              { cleanWord: 'under', displayWord: 'Under' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'silver', displayWord: 'silver' },
+              { cleanWord: 'light', displayWord: 'light' },
+              { cleanWord: 'of', displayWord: 'of' },
+              { cleanWord: 'a', displayWord: 'a' },
+              { cleanWord: 'tropical', displayWord: 'tropical' },
+              { cleanWord: 'full', displayWord: 'full' },
+              { cleanWord: 'moon', displayWord: 'moon,' },
+              { cleanWord: 'a', displayWord: 'a' },
+              { cleanWord: 'warm', displayWord: 'warm' },
+              { cleanWord: 'southern', displayWord: 'southern' },
+              { cleanWord: 'beach', displayWord: 'beach' },
+              { cleanWord: 'lay', displayWord: 'lay' },
+              { cleanWord: 'quiet', displayWord: 'quiet' },
+              { cleanWord: 'and', displayWord: 'and' },
+              { cleanWord: 'peaceful', displayWord: 'peaceful.' }
+            ]
+          },
+          {
+            id: 'st1-2',
+            englishText: 'Deep beneath the soft golden sand, a tiny baby sea turtle named Sam broke out of his smooth white egg.',
+            sinhalaTranslation: 'මෘදු රන්වන් වැලි යට ගැඹුරේ, සෑම් නම් කුඩා මුහුදු කැස්බෑ පැටියා ඔහුගේ සිනිඳු සුදු බිත්තර කටුව බිඳගෙන එළියට ආවා.',
+            words: [
+              { cleanWord: 'deep', displayWord: 'Deep' },
+              { cleanWord: 'beneath', displayWord: 'beneath' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'soft', displayWord: 'soft' },
+              { cleanWord: 'golden', displayWord: 'golden' },
+              { cleanWord: 'sand', displayWord: 'sand,' },
+              { cleanWord: 'a', displayWord: 'a' },
+              { cleanWord: 'tiny', displayWord: 'tiny' },
+              { cleanWord: 'baby', displayWord: 'baby' },
+              { cleanWord: 'sea', displayWord: 'sea' },
+              { cleanWord: 'turtle', displayWord: 'turtle', vocab: { word: 'turtle', phonetic: '/ˈtɜːtl/', sinhalaMeaning: 'කැස්බෑවා', englishDefinition: 'A marine reptile with a bony shell', partOfSpeech: 'noun' } },
+              { cleanWord: 'named', displayWord: 'named' },
+              { cleanWord: 'sam', displayWord: 'Sam' },
+              { cleanWord: 'broke', displayWord: 'broke' },
+              { cleanWord: 'out', displayWord: 'out' },
+              { cleanWord: 'of', displayWord: 'of' },
+              { cleanWord: 'his', displayWord: 'his' },
+              { cleanWord: 'smooth', displayWord: 'smooth' },
+              { cleanWord: 'white', displayWord: 'white' },
+              { cleanWord: 'egg', displayWord: 'egg.' }
+            ]
+          },
+          {
+            id: 'st1-3',
+            englishText: 'He flapped his tiny dark green flippers and crawled gently upward toward the cool midnight air.',
+            sinhalaTranslation: 'ඔහු තම කුඩා තද කොළ පැහැති වරල් සලමින් සිසිල් මධ්‍යම රාත්‍රී වාතය දෙසට ඉහළට බඩගාගෙන ගියා.',
+            words: [
+              { cleanWord: 'he', displayWord: 'He' },
+              { cleanWord: 'flapped', displayWord: 'flapped' },
+              { cleanWord: 'his', displayWord: 'his' },
+              { cleanWord: 'tiny', displayWord: 'tiny' },
+              { cleanWord: 'dark', displayWord: 'dark' },
+              { cleanWord: 'green', displayWord: 'green' },
+              { cleanWord: 'flippers', displayWord: 'flippers', vocab: { word: 'flippers', phonetic: '/ˈflɪpəz/', sinhalaMeaning: 'පිහිනන වරල්', englishDefinition: 'Broad flat limbs adapted for swimming', partOfSpeech: 'noun' } },
+              { cleanWord: 'and', displayWord: 'and' },
+              { cleanWord: 'crawled', displayWord: 'crawled', vocab: { word: 'crawled', phonetic: '/krɔːld/', sinhalaMeaning: 'බඩගාගෙන ගියා', englishDefinition: 'Moved slowly along the ground', partOfSpeech: 'verb' } },
+              { cleanWord: 'gently', displayWord: 'gently' },
+              { cleanWord: 'upward', displayWord: 'upward' },
+              { cleanWord: 'toward', displayWord: 'toward' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'cool', displayWord: 'cool' },
+              { cleanWord: 'midnight', displayWord: 'midnight' },
+              { cleanWord: 'air', displayWord: 'air.' }
+            ]
+          },
+          {
+            id: 'st1-4',
+            englishText: 'When Sam reached the surface, the vast Indian Ocean sparkled like a million diamonds.',
+            sinhalaTranslation: 'සෑම් මතුපිටට පැමිණි විට, මහා ඉන්දියන් සාගරය දියමන්ති මිලියනයක් සේ දිදුලමින් තිබුණා.',
+            words: [
+              { cleanWord: 'when', displayWord: 'When' },
+              { cleanWord: 'sam', displayWord: 'Sam' },
+              { cleanWord: 'reached', displayWord: 'reached' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'surface', displayWord: 'surface,', vocab: { word: 'surface', phonetic: '/ˈsɜːfɪs/', sinhalaMeaning: 'මතුපිට', englishDefinition: 'The outside or top layer of something', partOfSpeech: 'noun' } },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'vast', displayWord: 'vast' },
+              { cleanWord: 'indian', displayWord: 'Indian' },
+              { cleanWord: 'ocean', displayWord: 'Ocean' },
+              { cleanWord: 'sparkled', displayWord: 'sparkled' },
+              { cleanWord: 'like', displayWord: 'like' },
+              { cleanWord: 'a', displayWord: 'a' },
+              { cleanWord: 'million', displayWord: 'million' },
+              { cleanWord: 'diamonds', displayWord: 'diamonds.', vocab: { word: 'diamonds', phonetic: '/ˈdaɪəməndz/', sinhalaMeaning: 'දියමන්ති', englishDefinition: 'Precious sparkling bright gems', partOfSpeech: 'noun' } }
+            ]
+          },
+          {
+            id: 'st1-5',
+            englishText: 'A gentle sea breeze guided him toward the rhythmic sound of crashing waves.',
+            sinhalaTranslation: 'මෘදු මුහුදු සුළඟ රළ බිඳෙන රිද්මයානුකූල ශබ්දය දෙසට ඔහුව යොමු කළා.',
+            words: [
+              { cleanWord: 'a', displayWord: 'A' },
+              { cleanWord: 'gentle', displayWord: 'gentle' },
+              { cleanWord: 'sea', displayWord: 'sea' },
+              { cleanWord: 'breeze', displayWord: 'breeze' },
+              { cleanWord: 'guided', displayWord: 'guided' },
+              { cleanWord: 'him', displayWord: 'him' },
+              { cleanWord: 'toward', displayWord: 'toward' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'rhythmic', displayWord: 'rhythmic' },
+              { cleanWord: 'sound', displayWord: 'sound' },
+              { cleanWord: 'of', displayWord: 'of' },
+              { cleanWord: 'crashing', displayWord: 'crashing' },
+              { cleanWord: 'waves', displayWord: 'waves.' }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'st-ch2',
+        chapterNumber: 2,
+        titleEn: 'Into the Turquoise Waves',
+        titleSi: 'නිල්වන් සාගර රළ අතරට',
+        subtitleEn: 'The first swim of freedom',
+        subtitleSi: 'නිදහසේ ප්‍රථම පිහිනුම',
+        summaryEn: 'Protected by watching villagers, Sam reaches the warm ocean tide and begins his wonderful life at sea.',
+        summarySi: 'ගම්වාසීන්ගේ කරුණාවන්ත රැකවරණය මැද, සෑම් සාගර රළ අතරට පිවිස තම නිදහස් දිවිය අරඹයි.',
+        funFactEn: 'Sea turtles can migrate thousands of miles across whole oceans, yet return to the exact beach where they were born!',
+        funFactSi: 'මුහුදු කැස්බෑවන් සාගරය හරහා සැතපුම් දහස් ගණනක් පිහිනා ගියද, බිත්තර දැමීමට නැවත තමන් උපන් වෙරළටම පැමිණේ!',
+        keyVocabulary: [
+          { word: 'energy', phonetic: '/ˈenədʒi/', sinhalaMeaning: 'ශක්තිය / ජවය', englishDefinition: 'The strength and vitality required for action', partOfSpeech: 'noun' },
+          { word: 'protect', phonetic: '/prəˈtekt/', sinhalaMeaning: 'ආරක්ෂා කරනවා', englishDefinition: 'Keep safe from harm or injury', partOfSpeech: 'verb' },
+          { word: 'gracefully', phonetic: '/ˈɡreɪsfəli/', sinhalaMeaning: 'අලංකාර ලෙස', englishDefinition: 'In an attractive and elegant way', partOfSpeech: 'adverb' },
+          { word: 'coral', phonetic: '/ˈkɒrəl/', sinhalaMeaning: 'කොරල්පර', englishDefinition: 'Hard stony marine skeletons forming reefs', partOfSpeech: 'noun' }
+        ],
+        sentences: [
+          {
+            id: 'st2-1',
+            englishText: 'Sam pushed forward across the cool damp sand with all his youthful energy.',
+            sinhalaTranslation: 'සෑම් තම තරුණ ජවය උපරිමයෙන් යොදා සිසිල් තෙත් වැලි තලාව හරහා ඉදිරියට ගියා.',
+            words: [
+              { cleanWord: 'sam', displayWord: 'Sam' },
+              { cleanWord: 'pushed', displayWord: 'pushed' },
+              { cleanWord: 'forward', displayWord: 'forward' },
+              { cleanWord: 'across', displayWord: 'across' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'cool', displayWord: 'cool' },
+              { cleanWord: 'damp', displayWord: 'damp' },
+              { cleanWord: 'sand', displayWord: 'sand' },
+              { cleanWord: 'with', displayWord: 'with' },
+              { cleanWord: 'all', displayWord: 'all' },
+              { cleanWord: 'his', displayWord: 'his' },
+              { cleanWord: 'youthful', displayWord: 'youthful' },
+              { cleanWord: 'energy', displayWord: 'energy.', vocab: { word: 'energy', phonetic: '/ˈenədʒi/', sinhalaMeaning: 'ශක්තිය / ජවය', englishDefinition: 'The strength and vitality required for action', partOfSpeech: 'noun' } }
+            ]
+          },
+          {
+            id: 'st2-2',
+            englishText: 'Two kind village children watched quietly from afar with a red torch to protect him from crabs.',
+            sinhalaTranslation: 'ගමේ කරුණාවන්ත දරුවන් දෙදෙනෙක් කකුළුවන්ගෙන් ඔහුව ආරක්ෂා කිරීම සඳහා රතු විදුලි පන්දමක් දල්වා දුර සිට නිහඬව බලා සිටියා.',
+            words: [
+              { cleanWord: 'two', displayWord: 'Two' },
+              { cleanWord: 'kind', displayWord: 'kind' },
+              { cleanWord: 'village', displayWord: 'village' },
+              { cleanWord: 'children', displayWord: 'children' },
+              { cleanWord: 'watched', displayWord: 'watched' },
+              { cleanWord: 'quietly', displayWord: 'quietly' },
+              { cleanWord: 'from', displayWord: 'from' },
+              { cleanWord: 'afar', displayWord: 'afar' },
+              { cleanWord: 'with', displayWord: 'with' },
+              { cleanWord: 'a', displayWord: 'a' },
+              { cleanWord: 'red', displayWord: 'red' },
+              { cleanWord: 'torch', displayWord: 'torch' },
+              { cleanWord: 'to', displayWord: 'to' },
+              { cleanWord: 'protect', displayWord: 'protect', vocab: { word: 'protect', phonetic: '/prəˈtekt/', sinhalaMeaning: 'ආරක්ෂා කරනවා', englishDefinition: 'Keep safe from harm or injury', partOfSpeech: 'verb' } },
+              { cleanWord: 'him', displayWord: 'him' },
+              { cleanWord: 'from', displayWord: 'from' },
+              { cleanWord: 'crabs', displayWord: 'crabs.' }
+            ]
+          },
+          {
+            id: 'st2-3',
+            englishText: 'Suddenly, the first warm salty wave touched Sam’s tiny nose and lifted him gently.',
+            sinhalaTranslation: 'හදිසියේම, පළමු උණුසුම් ලුණු සහිත රළ පහර සෑම්ගේ කුඩා නාසය ස්පර්ශ කර ඔහුව මෘදු ලෙස ඔසවා ගත්තා.',
+            words: [
+              { cleanWord: 'suddenly', displayWord: 'Suddenly,' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'first', displayWord: 'first' },
+              { cleanWord: 'warm', displayWord: 'warm' },
+              { cleanWord: 'salty', displayWord: 'salty' },
+              { cleanWord: 'wave', displayWord: 'wave' },
+              { cleanWord: 'touched', displayWord: 'touched' },
+              { cleanWord: 'sams', displayWord: "Sam's" },
+              { cleanWord: 'tiny', displayWord: 'tiny' },
+              { cleanWord: 'nose', displayWord: 'nose' },
+              { cleanWord: 'and', displayWord: 'and' },
+              { cleanWord: 'lifted', displayWord: 'lifted' },
+              { cleanWord: 'him', displayWord: 'him' },
+              { cleanWord: 'gently', displayWord: 'gently.' }
+            ]
+          },
+          {
+            id: 'st2-4',
+            englishText: 'He began to swim gracefully into the deep blue water, feeling completely free.',
+            sinhalaTranslation: 'ඔහු සම්පූර්ණ නිදහසක් විඳිමින් ගැඹුරු නිල් දියඹ තුළ අලංකාරව පිහිනන්නට පටන් ගත්තා.',
+            words: [
+              { cleanWord: 'he', displayWord: 'He' },
+              { cleanWord: 'began', displayWord: 'began' },
+              { cleanWord: 'to', displayWord: 'to' },
+              { cleanWord: 'swim', displayWord: 'swim' },
+              { cleanWord: 'gracefully', displayWord: 'gracefully,', vocab: { word: 'gracefully', phonetic: '/ˈɡreɪsfəli/', sinhalaMeaning: 'අලංකාර ලෙස', englishDefinition: 'In an attractive and elegant way', partOfSpeech: 'adverb' } },
+              { cleanWord: 'into', displayWord: 'into' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'deep', displayWord: 'deep' },
+              { cleanWord: 'blue', displayWord: 'blue' },
+              { cleanWord: 'water', displayWord: 'water,' },
+              { cleanWord: 'feeling', displayWord: 'feeling' },
+              { cleanWord: 'completely', displayWord: 'completely' },
+              { cleanWord: 'free', displayWord: 'free.' }
+            ]
+          },
+          {
+            id: 'st2-5',
+            englishText: 'The ocean was now his vast and wonderful home, filled with coral gardens and endless adventures.',
+            sinhalaTranslation: 'කොරල් උයන් සහ නිමක් නැති වික්‍රමාන්විතයන්ගෙන් පිරි සාගරය දැන් ඔහුගේ මහා අපූරු නිවහන බවට පත්වුණා.',
+            words: [
+              { cleanWord: 'the', displayWord: 'The' },
+              { cleanWord: 'ocean', displayWord: 'ocean' },
+              { cleanWord: 'was', displayWord: 'was' },
+              { cleanWord: 'now', displayWord: 'now' },
+              { cleanWord: 'his', displayWord: 'his' },
+              { cleanWord: 'vast', displayWord: 'vast' },
+              { cleanWord: 'and', displayWord: 'and' },
+              { cleanWord: 'wonderful', displayWord: 'wonderful' },
+              { cleanWord: 'home', displayWord: 'home,' },
+              { cleanWord: 'filled', displayWord: 'filled' },
+              { cleanWord: 'with', displayWord: 'with' },
+              { cleanWord: 'coral', displayWord: 'coral', vocab: { word: 'coral', phonetic: '/ˈkɒrəl/', sinhalaMeaning: 'කොරල්පර', englishDefinition: 'Hard stony marine skeletons forming reefs', partOfSpeech: 'noun' } },
+              { cleanWord: 'gardens', displayWord: 'gardens' },
+              { cleanWord: 'and', displayWord: 'and' },
+              { cleanWord: 'endless', displayWord: 'endless' },
+              { cleanWord: 'adventures', displayWord: 'adventures.' }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'aurora-windmill',
+    categoryId: 'scifi',
+    categoryTitleEn: '3. Sci-Fi & Inventions',
+    categoryTitleSi: 'විද්‍යා ප්‍රබන්ධ සහ නව නිපැයුම්',
+    titleEn: 'The Windmill That Caught the Northern Lights',
+    titleSi: 'උත්තරාලෝකය අල්ලාගත් සුළං මෝල',
+    level: 'Elementary (A2)',
+    genreEn: 'Future Science & Wonder',
+    genreSi: 'අනාගත විද්‍යාව සහ විස්මය',
+    estimatedMinutes: 6,
+    coverAccent: '#8b5cf6',
+    coverImage: auroraWindmillCover,
+    theme: 'scifi',
+    quiz: [
+      {
+        id: 'aw-q1',
+        questionEn: 'What special material did young Liam use for the windmill blades?',
+        questionSi: 'සුළං මෝලේ පෙති සෑදීම සඳහා ලියාම් භාවිතා කළ විශේෂ ද්‍රව්‍යය කුමක්ද?',
+        options: ['Luminous crystal glass that absorbs light', 'Heavy dark iron plates', 'Old wooden oak planks'],
+        optionsSi: ['ආලෝකය උරාගන්නා දීප්තිමත් පළිඟු වීදුරු', 'බරැති කළු යකඩ තහඩු', 'පැරණි ඕක් ලී ලෑලි'],
+        correctIndex: 0,
+        explanationSi: 'ලියාම් සුළං මෝල සඳහා ආලෝකය ගබඩා කරගත හැකි පළිඟු වීදුරු පෙති නිර්මාණය කළේය.'
+      },
+      {
+        id: 'aw-q2',
+        questionEn: 'What happened when the northern lights danced above the valley?',
+        questionSi: 'නිම්නය ඉහළින් උත්තරාලෝකය නටන්නට පටන් ගත් විට කුමක් සිදුවූයේද?',
+        options: ['The windmill glowed and powered all the village street lamps with clean light', 'The windmill broke in the heavy wind', 'The lights disappeared immediately'],
+        optionsSi: ['සුළං මෝල බැබළෙමින් මුළු ගමේම පහන් පිරිසිදු ආලෝකයෙන් දැල්වීය', 'තද සුළඟින් සුළං මෝල කැඩී ගියේය', 'ආලෝකය වහාම නැතිවී ගියේය'],
+        correctIndex: 0,
+        explanationSi: 'සුළං මෝල ස්වභාවික ආලෝකය සහ සුළං බලය එක්කර මුළු ගම්මානයම ආලෝකවත් කළේය.'
+      }
+    ],
+    chapters: [
+      {
+        id: 'aw-ch1',
+        chapterNumber: 1,
+        titleEn: 'The Crystal Blades on the Hill',
+        titleSi: 'කඳු මුදුනේ පළිඟු පෙති',
+        subtitleEn: 'An invention powered by starlight',
+        subtitleSi: 'තාරකා එළියෙන් ක්‍රියා කරන නව නිපැයුම',
+        summaryEn: 'High upon Starling Hill, young inventor Liam builds a crystal windmill designed to harness clean energy from mountain winds.',
+        summarySi: 'ස්ටාර්ලින් කන්ද මුදුනේ, තරුණ නව නිපැයුම්කරු ලියාම් පිරිසිදු බලශක්තිය නිපදවීම සඳහා පළිඟු සුළං මෝලක් හදයි.',
+        funFactEn: 'Wind energy has been used by humans for over 2,000 years to pump water and grind grain!',
+        funFactSi: 'සුළං බලශක්තිය වසර 2,000 කට වැඩි කාලයක සිට මිනිසුන් විසින් ප්‍රයෝජනයට ගෙන ඇත!',
+        keyVocabulary: [
+          { word: 'windmill', phonetic: '/ˈwɪndmɪl/', sinhalaMeaning: 'සුළං මෝල', englishDefinition: 'A structure using wind to generate power', partOfSpeech: 'noun' },
+          { word: 'crystals', phonetic: '/ˈkrɪstlズ/', sinhalaMeaning: 'පළිඟු', englishDefinition: 'Clear transparent mineral gems', partOfSpeech: 'noun' },
+          { word: 'inventor', phonetic: '/ɪnˈventə/', sinhalaMeaning: 'නව නිපැයුම්කරු', englishDefinition: 'A person who invents new devices', partOfSpeech: 'noun' },
+          { word: 'harness', phonetic: '/ˈhɑːnɪs/', sinhalaMeaning: 'ප්‍රයෝජනයට ගන්නවා', englishDefinition: 'To capture and control natural power', partOfSpeech: 'verb' }
+        ],
+        sentences: [
+          {
+            id: 'aw1-1',
+            englishText: 'High upon the grassy slopes of Starling Hill stood the most unusual windmill in the entire country.',
+            sinhalaTranslation: 'ස්ටාර්ලින් කන්දේ තණකොළ පිරි බෑවුම මුදුනේ මුළු රටේම අසාමාන්‍යම සුළං මෝල පිහිටා තිබුණා.',
+            words: [
+              { cleanWord: 'high', displayWord: 'High' },
+              { cleanWord: 'upon', displayWord: 'upon' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'grassy', displayWord: 'grassy' },
+              { cleanWord: 'slopes', displayWord: 'slopes' },
+              { cleanWord: 'of', displayWord: 'of' },
+              { cleanWord: 'starling', displayWord: 'Starling' },
+              { cleanWord: 'hill', displayWord: 'Hill' },
+              { cleanWord: 'stood', displayWord: 'stood' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'most', displayWord: 'most' },
+              { cleanWord: 'unusual', displayWord: 'unusual' },
+              { cleanWord: 'windmill', displayWord: 'windmill', vocab: { word: 'windmill', phonetic: '/ˈwɪndmɪl/', sinhalaMeaning: 'සුළං මෝල', englishDefinition: 'A structure using wind to generate power', partOfSpeech: 'noun' } },
+              { cleanWord: 'in', displayWord: 'in' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'entire', displayWord: 'entire' },
+              { cleanWord: 'country', displayWord: 'country.' }
+            ]
+          },
+          {
+            id: 'aw1-2',
+            englishText: 'Instead of rough timber, sixteen-year-old Liam crafted its four giant blades from smooth, luminous crystal.',
+            sinhalaTranslation: 'රළු ලී වෙනුවට, දහසය හැවිරිදි ලියාම් එහි යෝධ පෙති හතර සිනිඳු, දීප්තිමත් පළිඟු වලින් නිමවා තිබුණා.',
+            words: [
+              { cleanWord: 'instead', displayWord: 'Instead' },
+              { cleanWord: 'of', displayWord: 'of' },
+              { cleanWord: 'rough', displayWord: 'rough' },
+              { cleanWord: 'timber', displayWord: 'timber,' },
+              { cleanWord: 'sixteenyearold', displayWord: 'sixteen-year-old' },
+              { cleanWord: 'liam', displayWord: 'Liam' },
+              { cleanWord: 'crafted', displayWord: 'crafted' },
+              { cleanWord: 'its', displayWord: 'its' },
+              { cleanWord: 'four', displayWord: 'four' },
+              { cleanWord: 'giant', displayWord: 'giant' },
+              { cleanWord: 'blades', displayWord: 'blades' },
+              { cleanWord: 'from', displayWord: 'from' },
+              { cleanWord: 'smooth', displayWord: 'smooth,' },
+              { cleanWord: 'luminous', displayWord: 'luminous' },
+              { cleanWord: 'crystal', displayWord: 'crystal.', vocab: { word: 'crystals', phonetic: '/ˈkrɪstlズ/', sinhalaMeaning: 'පළිඟු', englishDefinition: 'Clear transparent mineral gems', partOfSpeech: 'noun' } }
+            ]
+          },
+          {
+            id: 'aw1-3',
+            englishText: 'The villagers often wondered if a boy with simple tools could truly capture the invisible power of mountain storms.',
+            sinhalaTranslation: 'සරල ආයුධ ඇති පිරිමි ළමයෙකුට සැබවින්ම කඳුකර කුණාටුවල අදෘශ්‍යමාන බලය අල්ලාගත හැකිදැයි ගම්වාසීන් නිතර මවිත වුණා.',
+            words: [
+              { cleanWord: 'the', displayWord: 'The' },
+              { cleanWord: 'villagers', displayWord: 'villagers' },
+              { cleanWord: 'often', displayWord: 'often' },
+              { cleanWord: 'wondered', displayWord: 'wondered' },
+              { cleanWord: 'if', displayWord: 'if' },
+              { cleanWord: 'a', displayWord: 'a' },
+              { cleanWord: 'boy', displayWord: 'boy' },
+              { cleanWord: 'with', displayWord: 'with' },
+              { cleanWord: 'simple', displayWord: 'simple' },
+              { cleanWord: 'tools', displayWord: 'tools' },
+              { cleanWord: 'could', displayWord: 'could' },
+              { cleanWord: 'truly', displayWord: 'truly' },
+              { cleanWord: 'capture', displayWord: 'capture' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'invisible', displayWord: 'invisible' },
+              { cleanWord: 'power', displayWord: 'power' },
+              { cleanWord: 'of', displayWord: 'of' },
+              { cleanWord: 'mountain', displayWord: 'mountain' },
+              { cleanWord: 'storms', displayWord: 'storms.' }
+            ]
+          },
+          {
+            id: 'aw1-4',
+            englishText: 'Liam worked through chilly autumn nights, connecting copper coils and checking every tiny cog with care.',
+            sinhalaTranslation: 'ලියාම් තඹ දඟර සම්බන්ධ කරමින් සහ සෑම කුඩා දැති රෝදයක්ම ඉතා සැලකිල්ලෙන් පරීක්ෂා කරමින් සීතල සරත් රාත්‍රීන් පුරා වෙහෙසුණා.',
+            words: [
+              { cleanWord: 'liam', displayWord: 'Liam' },
+              { cleanWord: 'worked', displayWord: 'worked' },
+              { cleanWord: 'through', displayWord: 'through' },
+              { cleanWord: 'chilly', displayWord: 'chilly' },
+              { cleanWord: 'autumn', displayWord: 'autumn' },
+              { cleanWord: 'nights', displayWord: 'nights,' },
+              { cleanWord: 'connecting', displayWord: 'connecting' },
+              { cleanWord: 'copper', displayWord: 'copper' },
+              { cleanWord: 'coils', displayWord: 'coils' },
+              { cleanWord: 'and', displayWord: 'and' },
+              { cleanWord: 'checking', displayWord: 'checking' },
+              { cleanWord: 'every', displayWord: 'every' },
+              { cleanWord: 'tiny', displayWord: 'tiny' },
+              { cleanWord: 'cog', displayWord: 'cog' },
+              { cleanWord: 'with', displayWord: 'with' },
+              { cleanWord: 'care', displayWord: 'care.' }
+            ]
+          },
+          {
+            id: 'aw1-5',
+            englishText: 'He dreamed of providing free, gentle warmth to every cottage when the bitter winter arrived.',
+            sinhalaTranslation: 'දැඩි ශීත කාලය පැමිණි විට සෑම නිවසකටම නොමිලේ, මෘදු උණුසුමක් ලබාදීම ඔහුගේ සිහිනය වුණා.',
+            words: [
+              { cleanWord: 'he', displayWord: 'He' },
+              { cleanWord: 'dreamed', displayWord: 'dreamed' },
+              { cleanWord: 'of', displayWord: 'of' },
+              { cleanWord: 'providing', displayWord: 'providing' },
+              { cleanWord: 'free', displayWord: 'free,' },
+              { cleanWord: 'gentle', displayWord: 'gentle' },
+              { cleanWord: 'warmth', displayWord: 'warmth' },
+              { cleanWord: 'to', displayWord: 'to' },
+              { cleanWord: 'every', displayWord: 'every' },
+              { cleanWord: 'cottage', displayWord: 'cottage' },
+              { cleanWord: 'when', displayWord: 'when' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'bitter', displayWord: 'bitter' },
+              { cleanWord: 'winter', displayWord: 'winter' },
+              { cleanWord: 'arrived', displayWord: 'arrived.' }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'aw-ch2',
+        chapterNumber: 2,
+        titleEn: 'The Night the Valley Glowed',
+        titleSi: 'නිම්නය ආලෝකවත් වූ රාත්‍රිය',
+        subtitleEn: 'Emerald ribbons across the dark sky',
+        subtitleSi: 'අඳුරු අහසේ මරකත පැහැති ආලෝක රේඛා',
+        summaryEn: 'When rare aurora lights sweep the sky, Liam’s windmill generates a cascade of pure, radiant energy for the village.',
+        summarySi: 'දුර්ලභ උත්තරාලෝකය අහසේ දිස්වන විට, ලියාම්ගේ සුළං මෝල ගම්මානයටම දීප්තිමත් බලශක්තියක් ලබාදෙයි.',
+        funFactEn: 'The northern lights (aurora borealis) are caused by charged particles from the sun colliding with gases in Earth’s atmosphere!',
+        funFactSi: 'උත්තරාලෝකය ඇතිවන්නේ සූර්යයාගෙන් නිකුත් වන අංශු පෘථිවි වායුගෝලයේ වායූන් සමඟ ගැටීමෙනි!',
+        keyVocabulary: [
+          { word: 'aurora', phonetic: '/ɔːˈrɔːrə/', sinhalaMeaning: 'උත්තරාලෝකය', englishDefinition: 'A natural light display in the sky', partOfSpeech: 'noun' },
+          { word: 'spinning', phonetic: '/ˈspɪnɪŋ/', sinhalaMeaning: 'කැරකෙනවා', englishDefinition: 'Rotating rapidly around an axis', partOfSpeech: 'verb' },
+          { word: 'cheered', phonetic: '/tʃɪəd/', sinhalaMeaning: 'ප්‍රීති ඝෝෂා කළා', englishDefinition: 'Shouted with joy and approval', partOfSpeech: 'verb' },
+          { word: 'radiant', phonetic: '/ˈreɪdiənt/', sinhalaMeaning: 'දීප්තිමත් / බබළන', englishDefinition: 'Shining brightly and warmly', partOfSpeech: 'adjective' }
+        ],
+        sentences: [
+          {
+            id: 'aw2-1',
+            englishText: 'On a freezing December evening, glowing green and purple ribbons appeared across the northern sky.',
+            sinhalaTranslation: 'සීතල දෙසැම්බර් සැඳෑවක, උතුරු අහස පුරා දීප්තිමත් කොළ සහ දම් පැහැති ආලෝක රේඛා දිස්වුණා.',
+            words: [
+              { cleanWord: 'on', displayWord: 'On' },
+              { cleanWord: 'a', displayWord: 'a' },
+              { cleanWord: 'freezing', displayWord: 'freezing' },
+              { cleanWord: 'december', displayWord: 'December' },
+              { cleanWord: 'evening', displayWord: 'evening,' },
+              { cleanWord: 'glowing', displayWord: 'glowing' },
+              { cleanWord: 'green', displayWord: 'green' },
+              { cleanWord: 'and', displayWord: 'and' },
+              { cleanWord: 'purple', displayWord: 'purple' },
+              { cleanWord: 'ribbons', displayWord: 'ribbons' },
+              { cleanWord: 'appeared', displayWord: 'appeared' },
+              { cleanWord: 'across', displayWord: 'across' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'northern', displayWord: 'northern' },
+              { cleanWord: 'sky', displayWord: 'sky.', vocab: { word: 'aurora', phonetic: '/ɔːˈrɔːrə/', sinhalaMeaning: 'උත්තරාලෝකය', englishDefinition: 'A natural light display in the sky', partOfSpeech: 'noun' } }
+            ]
+          },
+          {
+            id: 'aw2-2',
+            englishText: 'The crystal windmill blades caught the cosmic light and began spinning with a harmonious hum.',
+            sinhalaTranslation: 'පළිඟු සුළං මෝල් පෙති ඒ ආකාශ ආලෝකය උරාගෙන සුමධුර නාදයක් සමඟ වේගයෙන් කැරකෙන්නට පටන් ගත්තා.',
+            words: [
+              { cleanWord: 'the', displayWord: 'The' },
+              { cleanWord: 'crystal', displayWord: 'crystal' },
+              { cleanWord: 'windmill', displayWord: 'windmill' },
+              { cleanWord: 'blades', displayWord: 'blades' },
+              { cleanWord: 'caught', displayWord: 'caught' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'cosmic', displayWord: 'cosmic' },
+              { cleanWord: 'light', displayWord: 'light' },
+              { cleanWord: 'and', displayWord: 'and' },
+              { cleanWord: 'began', displayWord: 'began' },
+              { cleanWord: 'spinning', displayWord: 'spinning', vocab: { word: 'spinning', phonetic: '/ˈspɪnɪŋ/', sinhalaMeaning: 'කැරකෙනවා', englishDefinition: 'Rotating rapidly around an axis', partOfSpeech: 'verb' } },
+              { cleanWord: 'with', displayWord: 'with' },
+              { cleanWord: 'a', displayWord: 'a' },
+              { cleanWord: 'harmonious', displayWord: 'harmonious' },
+              { cleanWord: 'hum', displayWord: 'hum.' }
+            ]
+          },
+          {
+            id: 'aw2-3',
+            englishText: 'One by one, the lanterns along the village roads flickered softly and burst into radiant golden light.',
+            sinhalaTranslation: 'එකින් එක ගමේ වීදි පහන් මෘදු ලෙස දැල්වී දීප්තිමත් රන්වන් ආලෝකයෙන් බැබළුණා.',
+            words: [
+              { cleanWord: 'one', displayWord: 'One' },
+              { cleanWord: 'by', displayWord: 'by' },
+              { cleanWord: 'one', displayWord: 'one,' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'lanterns', displayWord: 'lanterns' },
+              { cleanWord: 'along', displayWord: 'along' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'village', displayWord: 'village' },
+              { cleanWord: 'roads', displayWord: 'roads' },
+              { cleanWord: 'flickered', displayWord: 'flickered' },
+              { cleanWord: 'softly', displayWord: 'softly' },
+              { cleanWord: 'and', displayWord: 'and' },
+              { cleanWord: 'burst', displayWord: 'burst' },
+              { cleanWord: 'into', displayWord: 'into' },
+              { cleanWord: 'radiant', displayWord: 'radiant', vocab: { word: 'radiant', phonetic: '/ˈreɪdiənt/', sinhalaMeaning: 'දීප්තිමත් / බබළන', englishDefinition: 'Shining brightly and warmly', partOfSpeech: 'adjective' } },
+              { cleanWord: 'golden', displayWord: 'golden' },
+              { cleanWord: 'light', displayWord: 'light.' }
+            ]
+          },
+          {
+            id: 'aw2-4',
+            englishText: 'Families stepped out of their houses in amazement, feeling safe and warm under the glowing sky.',
+            sinhalaTranslation: 'පවුල් පිටින් මවිතයෙන් නිවෙස්වලින් එළියට පැමිණ, බබළන අහස යටතේ ආරක්ෂිත සහ උණුසුම් හැඟීමක් ලැබුවා.',
+            words: [
+              { cleanWord: 'families', displayWord: 'Families' },
+              { cleanWord: 'stepped', displayWord: 'stepped' },
+              { cleanWord: 'out', displayWord: 'out' },
+              { cleanWord: 'of', displayWord: 'of' },
+              { cleanWord: 'their', displayWord: 'their' },
+              { cleanWord: 'houses', displayWord: 'houses' },
+              { cleanWord: 'in', displayWord: 'in' },
+              { cleanWord: 'amazement', displayWord: 'amazement,' },
+              { cleanWord: 'feeling', displayWord: 'feeling' },
+              { cleanWord: 'safe', displayWord: 'safe' },
+              { cleanWord: 'and', displayWord: 'and' },
+              { cleanWord: 'warm', displayWord: 'warm' },
+              { cleanWord: 'under', displayWord: 'under' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'glowing', displayWord: 'glowing' },
+              { cleanWord: 'sky', displayWord: 'sky.' }
+            ]
+          },
+          {
+            id: 'aw2-5',
+            englishText: 'The villagers cheered loudly for Liam, whose clever invention turned cold night winds into pure warmth.',
+            sinhalaTranslation: 'සීතල රාත්‍රී සුළඟ පිරිසිදු උණුසුමක් බවට පත් කළ ලියාම්ගේ බුද්ධිමත් සොයාගැනීමට ගම්වැසියන් මහත් සේ ප්‍රීති ඝෝෂා කළා.',
+            words: [
+              { cleanWord: 'the', displayWord: 'The' },
+              { cleanWord: 'villagers', displayWord: 'villagers' },
+              { cleanWord: 'cheered', displayWord: 'cheered', vocab: { word: 'cheered', phonetic: '/tʃɪəd/', sinhalaMeaning: 'ප්‍රීති ඝෝෂා කළා', englishDefinition: 'Shouted with joy and approval', partOfSpeech: 'verb' } },
+              { cleanWord: 'loudly', displayWord: 'loudly' },
+              { cleanWord: 'for', displayWord: 'for' },
+              { cleanWord: 'liam', displayWord: 'Liam,' },
+              { cleanWord: 'whose', displayWord: 'whose' },
+              { cleanWord: 'clever', displayWord: 'clever' },
+              { cleanWord: 'invention', displayWord: 'invention' },
+              { cleanWord: 'turned', displayWord: 'turned' },
+              { cleanWord: 'cold', displayWord: 'cold' },
+              { cleanWord: 'night', displayWord: 'night' },
+              { cleanWord: 'winds', displayWord: 'winds' },
+              { cleanWord: 'into', displayWord: 'into' },
+              { cleanWord: 'pure', displayWord: 'pure' },
+              { cleanWord: 'warmth', displayWord: 'warmth.' }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'village-potter',
+    categoryId: 'kindness',
+    categoryTitleEn: '4. Kindness & Community',
+    categoryTitleSi: 'දයාව සහ මිත්‍රත්වය',
+    titleEn: 'The Village Potter’s Blue Teapot',
+    titleSi: 'ගමේ කුඹල්කරුගේ නිල් තේ බඳුන',
+    level: 'Beginner (A1)',
+    genreEn: 'Peace & Neighborhood',
+    genreSi: 'සාමය සහ අසල්වැසි සෙනෙහස',
+    estimatedMinutes: 5,
+    coverAccent: '#d97706',
+    coverImage: villagePotterCover,
+    theme: 'community',
+    quiz: [
+      {
+        id: 'vp-q1',
+        questionEn: 'What did Grandma Mala craft out of the riverbed clay?',
+        questionSi: 'ගඟ ඉවුරේ මැටිවලින් මාලා ආච්චි හැදුවේ කුමක්ද?',
+        options: ['A beautiful blue ceramic teapot painted with jasmine flowers', 'A tall red clay flower vase', 'A heavy baking pot'],
+        optionsSi: ['පිච්ච මල් ඇඳි අලංකාර නිල් මැටි තේ බඳුනක්', 'උස රතු මැටි මල් පෝච්චියක්', 'බරැති පාන් පුළුස්සන බඳුනක්'],
+        correctIndex: 0,
+        explanationSi: 'මාලා ආච්චි පිරිසිදු නිල් පැහැති අලංකාර තේ බඳුනක් හැදුවාය.'
+      },
+      {
+        id: 'vp-q2',
+        questionEn: 'How did the blue teapot help the two arguing neighbors?',
+        questionSi: 'නිල් තේ බඳුන තරහ වී සිටි අසල්වැසියන් දෙදෙනාට උපකාර කළේ කෙසේද?',
+        options: ['They sat together on the bench, shared hot ginger tea, and became friends again', 'They bought it at the town market', 'They broke it by accident'],
+        optionsSi: ['ඔවුන් බංකුවේ එකට වාඩි වී උණුසුම් ඉඟුරු තේ බී නැවත මිතුරන් වුණා', 'ඔවුන් එය නගර වෙළඳපොලෙන් මිලදී ගත්තා', 'ඔවුන් අතින් එය නොදැනුවත්ව බිඳී ගියා'],
+        correctIndex: 0,
+        explanationSi: 'උණුසුම් තේ කෝප්පය බෙදාගැනීමෙන් ඔවුන්ගේ ආරවුල විසඳී සිනහව පැමිණියේය.'
+      }
+    ],
+    chapters: [
+      {
+        id: 'vp-ch1',
+        chapterNumber: 1,
+        titleEn: 'Soft Clay and Warm Sunlight',
+        titleSi: 'මෘදු මැටි සහ උණුසුම් හිරු එළිය',
+        subtitleEn: 'The art of shaping peace',
+        subtitleSi: 'සාමයේ හැඩතල මවන කලාව',
+        summaryEn: 'In a peaceful riverside village, kind Grandma Mala shapes a magnificent blue clay teapot in her sunlit pottery workshop.',
+        summarySi: 'නිස්කලංක ගම්මානයක, කරුණාවන්ත මාලා ආච්චි හිරු එළිය වැටෙන තම වැඩපොළේ අලංකාර නිල් තේ බඳුනක් සාදයි.',
+        funFactEn: 'Pottery is one of the oldest human crafts in history, dating back over 20,000 years!',
+        funFactSi: 'කුඹල් කර්මාන්තය වසර 20,000 කට වඩා පැරණි, මිනිසාගේ මුල්ම ශිල්ප ක්‍රමවලින් එකකි!',
+        keyVocabulary: [
+          { word: 'potter', phonetic: '/ˈpɒtə/', sinhalaMeaning: 'කුඹල්කරු', englishDefinition: 'A person who makes ceramic pottery', partOfSpeech: 'noun' },
+          { word: 'workshop', phonetic: '/ˈwɜːkʃɒp/', sinhalaMeaning: 'වැඩපොළ', englishDefinition: 'A room where things are crafted', partOfSpeech: 'noun' },
+          { word: 'wheel', phonetic: '/wiːl/', sinhalaMeaning: 'සකපෝරුව / රෝදය', englishDefinition: 'A revolving disc used in pottery', partOfSpeech: 'noun' },
+          { word: 'delicate', phonetic: '/ˈdelɪkət/', sinhalaMeaning: 'සුන්දර / සියුම්', englishDefinition: 'Fine and subtle in quality', partOfSpeech: 'adjective' }
+        ],
+        sentences: [
+          {
+            id: 'vp1-1',
+            englishText: 'In a quiet village beside the Mahaweli River, Grandma Mala loved the smell of wet river clay.',
+            sinhalaTranslation: 'මහවැලි ගඟ අසල නිස්කලංක ගම්මානයක, මාලා ආච්චි තෙත් ගං ඉවුරු මැටි සුවඳට බෙහෙවින් ආදරය කළා.',
+            words: [
+              { cleanWord: 'in', displayWord: 'In' },
+              { cleanWord: 'a', displayWord: 'a' },
+              { cleanWord: 'quiet', displayWord: 'quiet' },
+              { cleanWord: 'village', displayWord: 'village' },
+              { cleanWord: 'beside', displayWord: 'beside' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'mahaweli', displayWord: 'Mahaweli' },
+              { cleanWord: 'river', displayWord: 'River,' },
+              { cleanWord: 'grandma', displayWord: 'Grandma' },
+              { cleanWord: 'mala', displayWord: 'Mala' },
+              { cleanWord: 'loved', displayWord: 'loved' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'smell', displayWord: 'smell' },
+              { cleanWord: 'of', displayWord: 'of' },
+              { cleanWord: 'wet', displayWord: 'wet' },
+              { cleanWord: 'river', displayWord: 'river' },
+              { cleanWord: 'clay', displayWord: 'clay.' }
+            ]
+          },
+          {
+            id: 'vp1-2',
+            englishText: 'Every afternoon, warm sunlight poured into her cozy workshop while her wooden potter wheel turned.',
+            sinhalaTranslation: 'සෑම දහවලකම, ඇගේ ලී සකපෝරුව කැරකෙද්දී ඇගේ සුවපහසු වැඩපොළ තුළට උණුසුම් හිරු එළිය ගලා ආවා.',
+            words: [
+              { cleanWord: 'every', displayWord: 'Every' },
+              { cleanWord: 'afternoon', displayWord: 'afternoon,' },
+              { cleanWord: 'warm', displayWord: 'warm' },
+              { cleanWord: 'sunlight', displayWord: 'sunlight' },
+              { cleanWord: 'poured', displayWord: 'poured' },
+              { cleanWord: 'into', displayWord: 'into' },
+              { cleanWord: 'her', displayWord: 'her' },
+              { cleanWord: 'cozy', displayWord: 'cozy' },
+              { cleanWord: 'workshop', displayWord: 'workshop,', vocab: { word: 'workshop', phonetic: '/ˈwɜːkʃɒp/', sinhalaMeaning: 'වැඩපොළ', englishDefinition: 'A room where things are crafted', partOfSpeech: 'noun' } },
+              { cleanWord: 'while', displayWord: 'while' },
+              { cleanWord: 'her', displayWord: 'her' },
+              { cleanWord: 'wooden', displayWord: 'wooden' },
+              { cleanWord: 'potter', displayWord: 'potter', vocab: { word: 'potter', phonetic: '/ˈpɒtə/', sinhalaMeaning: 'කුඹල්කරු', englishDefinition: 'A person who makes ceramic pottery', partOfSpeech: 'noun' } },
+              { cleanWord: 'wheel', displayWord: 'wheel', vocab: { word: 'wheel', phonetic: '/wiːl/', sinhalaMeaning: 'සකපෝරුව / රෝදය', englishDefinition: 'A revolving disc used in pottery', partOfSpeech: 'noun' } },
+              { cleanWord: 'turned', displayWord: 'turned.' }
+            ]
+          },
+          {
+            id: 'vp1-3',
+            englishText: 'With wrinkled but steady hands, she shaped a special round teapot with a gracefully curved handle.',
+            sinhalaTranslation: 'රැලි වැටුණු නමුත් ස්ථිර දෑතින්, ඇය අලංකාර ලෙස වක්‍ර වූ අතක් සහිත විශේෂ රවුම් තේ බඳුනක් හැඩගැසුවා.',
+            words: [
+              { cleanWord: 'with', displayWord: 'With' },
+              { cleanWord: 'wrinkled', displayWord: 'wrinkled' },
+              { cleanWord: 'but', displayWord: 'but' },
+              { cleanWord: 'steady', displayWord: 'steady' },
+              { cleanWord: 'hands', displayWord: 'hands,' },
+              { cleanWord: 'she', displayWord: 'she' },
+              { cleanWord: 'shaped', displayWord: 'shaped' },
+              { cleanWord: 'a', displayWord: 'a' },
+              { cleanWord: 'special', displayWord: 'special' },
+              { cleanWord: 'round', displayWord: 'round' },
+              { cleanWord: 'teapot', displayWord: 'teapot' },
+              { cleanWord: 'with', displayWord: 'with' },
+              { cleanWord: 'a', displayWord: 'a' },
+              { cleanWord: 'gracefully', displayWord: 'gracefully' },
+              { cleanWord: 'curved', displayWord: 'curved' },
+              { cleanWord: 'handle', displayWord: 'handle.' }
+            ]
+          },
+          {
+            id: 'vp1-4',
+            englishText: 'She painted delicate white jasmine blossoms across its bright sky-blue glaze.',
+            sinhalaTranslation: 'ඇය එහි දීප්තිමත් අහස්-නිල් පැහැති මතුපිට පුරා සියුම් සුදු පිච්ච මල් මෝස්තර ඇන්දා.',
+            words: [
+              { cleanWord: 'she', displayWord: 'She' },
+              { cleanWord: 'painted', displayWord: 'painted' },
+              { cleanWord: 'delicate', displayWord: 'delicate', vocab: { word: 'delicate', phonetic: '/ˈdelɪkət/', sinhalaMeaning: 'සුන්දර / සියුම්', englishDefinition: 'Fine and subtle in quality', partOfSpeech: 'adjective' } },
+              { cleanWord: 'white', displayWord: 'white' },
+              { cleanWord: 'jasmine', displayWord: 'jasmine' },
+              { cleanWord: 'blossoms', displayWord: 'blossoms' },
+              { cleanWord: 'across', displayWord: 'across' },
+              { cleanWord: 'its', displayWord: 'its' },
+              { cleanWord: 'bright', displayWord: 'bright' },
+              { cleanWord: 'skyblue', displayWord: 'sky-blue' },
+              { cleanWord: 'glaze', displayWord: 'glaze.' }
+            ]
+          },
+          {
+            id: 'vp1-5',
+            englishText: 'Grandma Mala smiled and whispered that this pot would soon bring peace to troubled hearts.',
+            sinhalaTranslation: 'මාලා ආච්චි සිනාසෙමින් මුමුණා කීවේ මෙම බඳුන ඉක්මනින්ම සිත් තැවුල් ඇති අය වෙත සාමය ගෙනෙනු ඇති බවයි.',
+            words: [
+              { cleanWord: 'grandma', displayWord: 'Grandma' },
+              { cleanWord: 'mala', displayWord: 'Mala' },
+              { cleanWord: 'smiled', displayWord: 'smiled' },
+              { cleanWord: 'and', displayWord: 'and' },
+              { cleanWord: 'whispered', displayWord: 'whispered' },
+              { cleanWord: 'that', displayWord: 'that' },
+              { cleanWord: 'this', displayWord: 'this' },
+              { cleanWord: 'pot', displayWord: 'pot' },
+              { cleanWord: 'would', displayWord: 'would' },
+              { cleanWord: 'soon', displayWord: 'soon' },
+              { cleanWord: 'bring', displayWord: 'bring' },
+              { cleanWord: 'peace', displayWord: 'peace' },
+              { cleanWord: 'to', displayWord: 'to' },
+              { cleanWord: 'troubled', displayWord: 'troubled' },
+              { cleanWord: 'hearts', displayWord: 'hearts.' }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'vp-ch2',
+        chapterNumber: 2,
+        titleEn: 'Tea of Forgiveness',
+        titleSi: 'සමාව දීමේ උණුසුම් තේ පැන්',
+        subtitleEn: 'Hot ginger tea and old friends',
+        subtitleSi: 'ඉඟුරු තේ සහ පැරණි මිත්‍රත්වය',
+        summaryEn: 'When two feuding farmers visit her porch, Grandma Mala serves steaming ginger tea from her blue teapot and mends their friendship.',
+        summarySi: 'තරහ වී සිටි ගොවීන් දෙදෙනෙක් පැමිණි විට, මාලා ආච්චි නිල් තේ බඳුනෙන් ඉඟුරු තේ පිළිගන්වා ඔවුන්ගේ මිත්‍රත්වය නැවත ඇති කරයි.',
+        funFactEn: 'Ceylon tea is renowned worldwide, and sharing tea with visitors is one of Sri Lanka’s warmest hospitality traditions!',
+        funFactSi: 'ලංකා තේ ලොව පුරා ප්‍රසිද්ධ අතර, අමුත්තන්ට තේ පිළිගැන්වීම ශ්‍රී ලාංකික ආගන්තුක සත්කාරයේ උතුම් සිරිතකි!',
+        keyVocabulary: [
+          { word: 'ginger', phonetic: '/ˈdʒɪndʒə/', sinhalaMeaning: 'ඉඟුරු', englishDefinition: 'A hot fragrant kitchen root spice', partOfSpeech: 'noun' },
+          { word: 'neighbors', phonetic: '/ˈneɪbəz/', sinhalaMeaning: 'අසල්වැසියන්', englishDefinition: 'People living near each other', partOfSpeech: 'noun' },
+          { word: 'laughter', phonetic: '/ˈlɑːftə/', sinhalaMeaning: 'සිනහව', englishDefinition: 'The sound of amusement and joy', partOfSpeech: 'noun' },
+          { word: 'forgiveness', phonetic: '/fəˈɡɪvnəs/', sinhalaMeaning: 'සමාව දීම', englishDefinition: 'Letting go of anger and grudge', partOfSpeech: 'noun' }
+        ],
+        sentences: [
+          {
+            id: 'vp2-1',
+            englishText: 'The next morning, two neighboring farmers named Sunil and Rohan sat on the wooden bench, frowning and looking away.',
+            sinhalaTranslation: 'පසුදා උදෑසන, සුනිල් සහ රොහාන් නම් අසල්වැසි ගොවීන් දෙදෙනා නොරිස්සුම් මුහුණින් බංකුවේ දෙපැත්ත බලාගෙන වාඩි වී සිටියා.',
+            words: [
+              { cleanWord: 'the', displayWord: 'The' },
+              { cleanWord: 'next', displayWord: 'next' },
+              { cleanWord: 'morning', displayWord: 'morning,' },
+              { cleanWord: 'two', displayWord: 'two' },
+              { cleanWord: 'neighboring', displayWord: 'neighboring' },
+              { cleanWord: 'farmers', displayWord: 'farmers' },
+              { cleanWord: 'named', displayWord: 'named' },
+              { cleanWord: 'sunil', displayWord: 'Sunil' },
+              { cleanWord: 'and', displayWord: 'and' },
+              { cleanWord: 'rohan', displayWord: 'Rohan' },
+              { cleanWord: 'sat', displayWord: 'sat' },
+              { cleanWord: 'on', displayWord: 'on' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'wooden', displayWord: 'wooden' },
+              { cleanWord: 'bench', displayWord: 'bench,' },
+              { cleanWord: 'frowning', displayWord: 'frowning' },
+              { cleanWord: 'and', displayWord: 'and' },
+              { cleanWord: 'looking', displayWord: 'looking' },
+              { cleanWord: 'away', displayWord: 'away.' }
+            ]
+          },
+          {
+            id: 'vp2-2',
+            englishText: 'They had argued over a broken fence and had refused to speak to each other for an entire month.',
+            sinhalaTranslation: 'කැඩුණු වැටක් නිසා ඔවුන් වාද විවාද කරගෙන මුළු මාසයක් තිස්සේ එකිනෙකා සමඟ කතා නොකර සිටියා.',
+            words: [
+              { cleanWord: 'they', displayWord: 'They' },
+              { cleanWord: 'had', displayWord: 'had' },
+              { cleanWord: 'argued', displayWord: 'argued' },
+              { cleanWord: 'over', displayWord: 'over' },
+              { cleanWord: 'a', displayWord: 'a' },
+              { cleanWord: 'broken', displayWord: 'broken' },
+              { cleanWord: 'fence', displayWord: 'fence' },
+              { cleanWord: 'and', displayWord: 'and' },
+              { cleanWord: 'had', displayWord: 'had' },
+              { cleanWord: 'refused', displayWord: 'refused' },
+              { cleanWord: 'to', displayWord: 'to' },
+              { cleanWord: 'speak', displayWord: 'speak' },
+              { cleanWord: 'to', displayWord: 'to' },
+              { cleanWord: 'each', displayWord: 'each' },
+              { cleanWord: 'other', displayWord: 'other' },
+              { cleanWord: 'for', displayWord: 'for' },
+              { cleanWord: 'an', displayWord: 'an' },
+              { cleanWord: 'entire', displayWord: 'entire' },
+              { cleanWord: 'month', displayWord: 'month.' }
+            ]
+          },
+          {
+            id: 'vp2-3',
+            englishText: 'Grandma Mala brought out the shiny blue teapot, pouring steaming fragrant ginger tea into two clay cups.',
+            sinhalaTranslation: 'මාලා ආච්චි දිදුලන නිල් තේ බඳුන රැගෙන විත්, දුම් දමන සුවඳැති ඉඟුරු තේ මැටි කෝප්ප දෙකකට වත් කළා.',
+            words: [
+              { cleanWord: 'grandma', displayWord: 'Grandma' },
+              { cleanWord: 'mala', displayWord: 'Mala' },
+              { cleanWord: 'brought', displayWord: 'brought' },
+              { cleanWord: 'out', displayWord: 'out' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'shiny', displayWord: 'shiny' },
+              { cleanWord: 'blue', displayWord: 'blue' },
+              { cleanWord: 'teapot', displayWord: 'teapot,' },
+              { cleanWord: 'pouring', displayWord: 'pouring' },
+              { cleanWord: 'steaming', displayWord: 'steaming' },
+              { cleanWord: 'fragrant', displayWord: 'fragrant' },
+              { cleanWord: 'ginger', displayWord: 'ginger', vocab: { word: 'ginger', phonetic: '/ˈdʒɪndʒə/', sinhalaMeaning: 'ඉඟුරු', englishDefinition: 'A hot fragrant kitchen root spice', partOfSpeech: 'noun' } },
+              { cleanWord: 'tea', displayWord: 'tea' },
+              { cleanWord: 'into', displayWord: 'into' },
+              { cleanWord: 'two', displayWord: 'two' },
+              { cleanWord: 'clay', displayWord: 'clay' },
+              { cleanWord: 'cups', displayWord: 'cups.' }
+            ]
+          },
+          {
+            id: 'vp2-4',
+            englishText: 'As the spicy sweetness warmed their hands, Sunil looked up and admitted his mistake with a gentle smile.',
+            sinhalaTranslation: 'මිරිස් රසැති පැණි රසය ඔවුන්ගේ දෑත් උණුසුම් කරද්දී, සුනිල් මෘදු සිනහවකින් තම වරද පිළිගත්තා.',
+            words: [
+              { cleanWord: 'as', displayWord: 'As' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'spicy', displayWord: 'spicy' },
+              { cleanWord: 'sweetness', displayWord: 'sweetness' },
+              { cleanWord: 'warmed', displayWord: 'warmed' },
+              { cleanWord: 'their', displayWord: 'their' },
+              { cleanWord: 'hands', displayWord: 'hands,' },
+              { cleanWord: 'sunil', displayWord: 'Sunil' },
+              { cleanWord: 'looked', displayWord: 'looked' },
+              { cleanWord: 'up', displayWord: 'up' },
+              { cleanWord: 'and', displayWord: 'and' },
+              { cleanWord: 'admitted', displayWord: 'admitted' },
+              { cleanWord: 'his', displayWord: 'his' },
+              { cleanWord: 'mistake', displayWord: 'mistake' },
+              { cleanWord: 'with', displayWord: 'with' },
+              { cleanWord: 'a', displayWord: 'a' },
+              { cleanWord: 'gentle', displayWord: 'gentle' },
+              { cleanWord: 'smile', displayWord: 'smile.' }
+            ]
+          },
+          {
+            id: 'vp2-5',
+            englishText: 'Rohan laughed and clasped his neighbor’s hand, and the sound of joyful laughter filled the village street once more.',
+            sinhalaTranslation: 'රොහාන් සිනාසෙමින් තම අසල්වැසියාගේ අත අල්ලාගත් අතර, ප්‍රීතිමත් සිනහ හඬ නැවත වරක් ගම් වීදිය පුරා පැතිර ගියා.',
+            words: [
+              { cleanWord: 'rohan', displayWord: 'Rohan' },
+              { cleanWord: 'laughed', displayWord: 'laughed' },
+              { cleanWord: 'and', displayWord: 'and' },
+              { cleanWord: 'clasped', displayWord: 'clasped' },
+              { cleanWord: 'his', displayWord: 'his' },
+              { cleanWord: 'neighbors', displayWord: "neighbor's", vocab: { word: 'neighbors', phonetic: '/ˈneɪbəz/', sinhalaMeaning: 'අසල්වැසියන්', englishDefinition: 'People living near each other', partOfSpeech: 'noun' } },
+              { cleanWord: 'hand', displayWord: 'hand,' },
+              { cleanWord: 'and', displayWord: 'and' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'sound', displayWord: 'sound' },
+              { cleanWord: 'of', displayWord: 'of' },
+              { cleanWord: 'joyful', displayWord: 'joyful' },
+              { cleanWord: 'laughter', displayWord: 'laughter,', vocab: { word: 'laughter', phonetic: '/ˈlɑːftə/', sinhalaMeaning: 'සිනහව', englishDefinition: 'The sound of amusement and joy', partOfSpeech: 'noun' } },
+              { cleanWord: 'filled', displayWord: 'filled' },
+              { cleanWord: 'the', displayWord: 'the' },
+              { cleanWord: 'village', displayWord: 'village' },
+              { cleanWord: 'street', displayWord: 'street' },
+              { cleanWord: 'once', displayWord: 'once' },
+              { cleanWord: 'more', displayWord: 'more.' }
+            ]
+          }
+        ]
+      }
+    ]
   }
 ];
+

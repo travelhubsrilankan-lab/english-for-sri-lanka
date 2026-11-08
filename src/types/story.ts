@@ -47,8 +47,20 @@ export interface StoryQuizQuestion {
   explanationSi: string;
 }
 
+export interface StoryCategory {
+  id: 'mystery' | 'nature' | 'scifi' | 'kindness';
+  titleEn: string;
+  titleSi: string;
+  descriptionSi: string;
+  badgeColor: string;
+  coverImage?: string;
+}
+
 export interface Story {
   id: string;
+  categoryId: 'mystery' | 'nature' | 'scifi' | 'kindness';
+  categoryTitleEn: string;
+  categoryTitleSi: string;
   titleEn: string;
   titleSi: string;
   level: 'Beginner (A1)' | 'Elementary (A2)' | 'Intermediate (B1)';
