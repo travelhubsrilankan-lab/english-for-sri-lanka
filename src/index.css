@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer utilities {
+  .perspective-2000 {
+    perspective: 2000px;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+}
+
+/* Modern luxury paper textures */
+.modern-paper-light {
+  background-color: #ffffff;
+  background-image: 
+    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 1) 0%, rgba(253, 252, 250, 0.9) 100%),
+    linear-gradient(90deg, rgba(0,0,0,0.015) 0%, rgba(0,0,0,0) 8%, rgba(0,0,0,0) 92%, rgba(0,0,0,0.02) 100%);
+}
+
+.modern-paper-dark {
+  background-color: #121418;
+  background-image: 
+    radial-gradient(ellipse at 50% 0%, rgba(30, 34, 42, 0.8) 0%, rgba(18, 20, 24, 0.95) 100%),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0) 8%, rgba(0,0,0,0) 92%, rgba(0,0,0,0.3) 100%);
+}
+
+/* Real book page stack edge 3D effect */
+.book-edge-stack-left {
+  box-shadow: 
+    -1px 0 0 1px rgba(0,0,0,0.06),
+    -3px 2px 0 0 rgba(230,225,215,0.8),
+    -5px 3px 0 0 rgba(215,210,200,0.7),
+    -8px 6px 16px -2px rgba(0,0,0,0.18);
+}
+
+.book-edge-stack-right {
+  box-shadow: 
+    1px 0 0 1px rgba(0,0,0,0.06),
+    3px 2px 0 0 rgba(230,225,215,0.8),
+    5px 3px 0 0 rgba(215,210,200,0.7),
+    8px 6px 16px -2px rgba(0,0,0,0.18);
+}
+
+.dark .book-edge-stack-left {
+  box-shadow: 
+    -1px 0 0 1px rgba(255,255,255,0.04),
+    -3px 2px 0 0 rgba(28,32,38,0.9),
+    -5px 3px 0 0 rgba(20,24,28,0.9),
+    -10px 8px 24px -2px rgba(0,0,0,0.5);
+}
+
+.dark .book-edge-stack-right {
+  box-shadow: 
+    1px 0 0 1px rgba(255,255,255,0.04),
+    3px 2px 0 0 rgba(28,32,38,0.9),
+    5px 3px 0 0 rgba(20,24,28,0.9),
+    10px 8px 24px -2px rgba(0,0,0,0.5);
+}
+
+/* Realistic spine curvature shadow */
+.book-spine-crease-left {
+  box-shadow: inset -22px 0 28px -12px rgba(0, 0, 0, 0.12);
+}
+.book-spine-crease-right {
+  box-shadow: inset 22px 0 28px -12px rgba(0, 0, 0, 0.12);
+}
+.dark .book-spine-crease-left {
+  box-shadow: inset -24px 0 32px -12px rgba(0, 0, 0, 0.45);
+}
+.dark .book-spine-crease-right {
+  box-shadow: inset 24px 0 32px -12px rgba(0, 0, 0, 0.45);
+}
+
+/* Audio wave animation */
+@keyframes soundwave {
+  0%, 100% { height: 4px; }
+  50% { height: 16px; }
+}
+
+.animate-wave-1 {
+  animation: soundwave 0.8s ease-in-out infinite;
+}
+.animate-wave-2 {
+  animation: soundwave 0.6s ease-in-out infinite 0.15s;
+}
+.animate-wave-3 {
+  animation: soundwave 0.9s ease-in-out infinite 0.3s;
+}
+.animate-wave-4 {
+  animation: soundwave 0.7s ease-in-out infinite 0.2s;
+}

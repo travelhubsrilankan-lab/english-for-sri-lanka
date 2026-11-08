@@ -1,0 +1,6 @@
+{
+  "name": "StoryGlow - Interactive English Storybook",
+  "description": "An authentic double-page interactive storybook for English learners with realistic page turns, audio narration, 5 distinct stories, Table of Contents, and Sinhala vocabulary guidance.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
