@@ -171,8 +171,8 @@ export const TableOfContentsPage: React.FC<TableOfContentsPageProps> = ({
                   }}
                   className="group text-left bg-[rgba(15,23,46,0.9)] hover:bg-[#141F3D] rounded-2xl border border-[rgba(165,180,252,0.16)] hover:border-[rgba(108,123,255,0.65)] p-4 shadow-[0_16px_40px_-15px_rgba(0,0,0,0.65)] hover:shadow-[0_0_32px_-8px_rgba(99,102,241,0.3)] transition-all duration-200 cursor-pointer flex items-center gap-4"
                 >
-                  {/* 4:3 Illustration Box */}
-                  <div className="relative w-28 sm:w-32 aspect-[4/3] rounded-xl overflow-hidden shrink-0 border border-[rgba(199,210,254,0.18)] bg-[#090F22]">
+                  {/* Compact 4:3 Illustration Box */}
+                  <div className="relative w-20 sm:w-24 aspect-[4/3] rounded-xl overflow-hidden shrink-0 border border-[rgba(199,210,254,0.18)] bg-[#090F22]">
                     {!imgFailed ? (
                       <img
                         src={cat.coverImage}
@@ -237,7 +237,7 @@ export const TableOfContentsPage: React.FC<TableOfContentsPageProps> = ({
           <div className="bg-[rgba(15,23,46,0.92)] rounded-2xl border border-[rgba(165,180,252,0.18)] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-[0_14px_34px_rgba(0,0,0,0.45)]">
             <div className="flex items-center gap-4">
               {currentCategory && (
-                <div className="w-20 aspect-[4/3] rounded-xl overflow-hidden shrink-0 border border-[rgba(199,210,254,0.2)] bg-[#090F22]">
+                <div className="w-14 sm:w-16 aspect-[4/3] rounded-xl overflow-hidden shrink-0 border border-[rgba(199,210,254,0.2)] bg-[#090F22]">
                   {!failedImages[`banner-${currentCategory.id}`] ? (
                     <img
                       src={currentCategory.coverImage}
@@ -336,7 +336,7 @@ export const TableOfContentsPage: React.FC<TableOfContentsPageProps> = ({
                   className="group p-4 sm:p-5 rounded-2xl bg-[rgba(15,23,46,0.9)] hover:bg-[#141F3D] border border-[rgba(165,180,252,0.16)] hover:border-[rgba(108,123,255,0.65)] shadow-[0_14px_34px_rgba(0,0,0,0.45)] hover:shadow-[0_0_28px_-8px_rgba(99,102,241,0.3)] transition-all duration-200 cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                 >
                   <div className="flex items-start gap-4 flex-1 min-w-0">
-                    <div className="relative w-24 aspect-[4/3] rounded-xl overflow-hidden shrink-0 border border-[rgba(199,210,254,0.2)] bg-[#090F22]">
+                    <div className="relative w-16 sm:w-20 aspect-[4/3] rounded-xl overflow-hidden shrink-0 border border-[rgba(199,210,254,0.2)] bg-[#090F22]">
                       {story.coverImage ? (
                         <img
                           src={story.coverImage}

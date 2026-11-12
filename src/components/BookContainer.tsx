@@ -315,37 +315,38 @@ export const BookContainer: React.FC<BookContainerProps> = ({
       )}
 
       {/* Main Dark Glass Storybook Sheet */}
-      <article className="w-full bg-[rgba(15,23,46,0.94)] backdrop-blur-md rounded-3xl p-6 sm:p-10 border border-[rgba(165,180,252,0.2)] shadow-[0_24px_70px_-12px_rgba(0,0,0,0.75)] flex flex-col justify-between">
-        {/* Story Artwork Header */}
-        {story.coverImage && (
-          <div className="w-full aspect-[16/9] max-h-72 rounded-2xl overflow-hidden mb-7 border border-[rgba(165,180,252,0.2)] bg-[#090F22]">
-            <img
-              src={story.coverImage}
-              alt={`${story.titleEn} - ${story.titleSi}`}
-              referrerPolicy="no-referrer"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
+      <article className="w-full bg-[rgba(15,23,46,0.94)] backdrop-blur-md rounded-3xl p-6 sm:p-9 border border-[rgba(165,180,252,0.2)] shadow-[0_24px_70px_-12px_rgba(0,0,0,0.75)] flex flex-col justify-between">
+        {/* Compact Story Title & Artwork Banner */}
+        <header className="pb-5 mb-6 border-b border-[rgba(165,180,252,0.16)] flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+          {story.coverImage && (
+            <div className="w-28 sm:w-32 aspect-[4/3] rounded-xl overflow-hidden shrink-0 border border-[rgba(165,180,252,0.22)] bg-[#090F22] shadow-[0_10px_24px_-8px_rgba(0,0,0,0.6)]">
+              <img
+                src={story.coverImage}
+                alt={`${story.titleEn} - ${story.titleSi}`}
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
 
-        {/* Story Title Banner */}
-        <header className="pb-5 mb-7 border-b border-[rgba(165,180,252,0.16)]">
-          <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-[#94A3B8] mb-2">
-            <span className="text-[#8CA8FF] font-semibold">{story.categoryTitleEn}</span>
-            <span aria-hidden="true">·</span>
-            <span className="font-sinhala">{story.categoryTitleSi}</span>
-            <span aria-hidden="true">·</span>
-            <span>{story.level}</span>
-            <span aria-hidden="true">·</span>
-            <span className="tabular-nums">{story.estimatedMinutes} min read</span>
-          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-[#94A3B8] mb-2">
+              <span className="text-[#8CA8FF] font-semibold">{story.categoryTitleEn}</span>
+              <span aria-hidden="true">·</span>
+              <span className="font-sinhala">{story.categoryTitleSi}</span>
+              <span aria-hidden="true">·</span>
+              <span>{story.level}</span>
+              <span aria-hidden="true">·</span>
+              <span className="tabular-nums">{story.estimatedMinutes} min read</span>
+            </div>
 
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#FFFFFF] tracking-tight">
-            {readMode === 'full' ? story.titleEn : currentChapter.titleEn}
-          </h1>
-          <p className="text-sm sm:text-base font-sinhala text-[#CBD5E1] font-medium mt-1 tracking-[0.01em]">
-            {readMode === 'full' ? story.titleSi : currentChapter.titleSi}
-          </p>
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#FFFFFF] tracking-tight">
+              {readMode === 'full' ? story.titleEn : currentChapter.titleEn}
+            </h1>
+            <p className="text-sm sm:text-base font-sinhala text-[#CBD5E1] font-medium mt-1 tracking-[0.01em]">
+              {readMode === 'full' ? story.titleSi : currentChapter.titleSi}
+            </p>
+          </div>
         </header>
 
         {/* Story Body */}
