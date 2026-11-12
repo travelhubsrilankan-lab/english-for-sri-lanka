@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Story } from '../types/story';
-import { X, CheckCircle, AlertCircle, Award, RotateCcw } from 'lucide-react';
+import { X, CheckCircle2, AlertCircle, Award, RotateCcw, Volume2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { soundEffects } from '../utils/audio';
+import { soundEffects, speechNarrator } from '../utils/audio';
 
 interface QuizModalProps {
   isOpen: boolean;
@@ -10,12 +10,26 @@ interface QuizModalProps {
   story: Story;
 }
 
+const OPTION_LETTERS = ['A', 'B', 'C', 'D'];
+
 export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isAnswerSubmitted, setIsAnswerSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const [isQuizFinished, setIsQuizFinished] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentQuestionIndex(0);
+      setSelectedOption(null);
+      setIsAnswerSubmitted(false);
+      setScore(0);
+      setIsQuizFinished(false);
+    } else {
+      speechNarrator.stop();
+    }
+  }, [isOpen, story.id]);
 
   if (!isOpen) return null;
 
@@ -51,6 +65,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
   };
 
   const handleResetQuiz = () => {
+    soundEffects.playClick();
     setCurrentQuestionIndex(0);
     setSelectedOption(null);
     setIsAnswerSubmitted(false);
@@ -59,149 +74,201 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-      <div className="relative w-full max-w-lg bg-white dark:bg-[#15181f] rounded-3xl shadow-2xl border border-stone-200 dark:border-white/10 overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100 dark:border-white/10 bg-stone-50/70 dark:bg-white/[0.02]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(4,7,17,0.82)] backdrop-blur-sm">
+      <div className="relative w-full max-w-lg bg-[#0F172E] rounded-3xl shadow-2xl border border-[rgba(165,180,252,0.22)] overflow-hidden flex flex-col">
+        {/* Midnight Indigo Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[rgba(165,180,252,0.16)] bg-[#0B1124]">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#1A264B] text-[#8CA8FF] border border-[rgba(129,140,248,0.28)] flex items-center justify-center shrink-0">
               <Award className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-serif font-bold text-stone-900 dark:text-stone-100">
-                කතාව තේරුම් ගැනීම · Comprehension
+              <h2 className="text-base font-serif font-bold text-[#FFFFFF]">
+                Comprehension Quiz · කතාව තේරුම් ගැනීම
               </h2>
-              <p className="text-xs text-stone-500 dark:text-stone-400">
-                {story.titleEn}
-              </p>
+              <p className="text-xs text-[#94A3B8]">{story.titleEn}</p>
             </div>
           </div>
+
           <button
-            onClick={onClose}
-            className="p-1.5 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"
+            type="button"
+            onClick={() => {
+              soundEffects.playClick();
+              onClose();
+            }}
+            className="p-2 rounded-lg text-[#94A3B8] hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.1)] transition-colors cursor-pointer"
+            aria-label="Close quiz"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Content */}
+        {/* Body */}
         <div className="p-6">
           {!isQuizFinished && currentQ ? (
             <div>
-              <div className="flex items-center justify-between text-xs text-stone-400 mb-3 font-mono">
-                <span>Question {currentQuestionIndex + 1} of {story.quiz.length}</span>
-                <span>Score: {score}</span>
+              {/* Progress & Score Metadata */}
+              <div className="flex items-center justify-between text-xs text-[#94A3B8] mb-4 tabular-nums">
+                <span>
+                  Question {currentQuestionIndex + 1} of {story.quiz.length}
+                </span>
+                <span className="font-semibold text-[#8CA8FF]">
+                  Score: {score} / {story.quiz.length}
+                </span>
               </div>
 
-              {/* Question En & Si */}
-              <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100 mb-1">
-                {currentQ.questionEn}
-              </h3>
-              <p className="text-xs text-amber-600 dark:text-amber-400 font-sinhala mb-4">
-                {currentQ.questionSi}
-              </p>
+              {/* English-Only Question */}
+              <div className="flex items-start justify-between gap-3 mb-5">
+                <h3 className="text-base sm:text-lg font-serif font-bold text-[#FFFFFF] leading-snug">
+                  {currentQ.questionEn}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundEffects.playClick();
+                    speechNarrator.speakText(currentQ.questionEn, {});
+                  }}
+                  className="p-2 rounded-lg bg-[#182242] hover:bg-[#21305C] text-[#9CB8FF] transition-colors shrink-0 cursor-pointer"
+                  title="Listen to question in English"
+                  aria-label="Listen to question"
+                >
+                  <Volume2 className="w-4 h-4" />
+                </button>
+              </div>
 
-              {/* Options */}
+              {/* English-Only Answer Options */}
               <div className="space-y-2.5">
                 {currentQ.options.map((option, idx) => {
                   const isSelected = selectedOption === idx;
                   const isAnswer = currentQ.correctIndex === idx;
 
-                  let optionStyle = 'bg-stone-50/50 dark:bg-[#1a1e27] border-stone-200/80 dark:border-white/5 text-stone-800 dark:text-stone-200 hover:border-amber-400';
+                  let optionStyle =
+                    'bg-[#131C38] border-[rgba(165,180,252,0.16)] text-[#E2E8F0] hover:border-[rgba(108,123,255,0.65)] hover:bg-[#172347]';
                   if (isAnswerSubmitted) {
                     if (isAnswer) {
-                      optionStyle = 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 font-medium';
+                      optionStyle =
+                        'bg-[rgba(2,44,34,0.72)] border-[rgba(52,211,153,0.75)] text-[#D1FAE5] font-semibold';
                     } else if (isSelected && !isAnswer) {
-                      optionStyle = 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-900 dark:text-rose-200';
+                      optionStyle =
+                        'bg-[rgba(76,5,25,0.72)] border-[rgba(251,113,133,0.75)] text-[#FFE4E6]';
+                    } else {
+                      optionStyle =
+                        'bg-[#0C1226] border-[rgba(165,180,252,0.1)] text-[#64748B]';
                     }
                   } else if (isSelected) {
-                    optionStyle = 'bg-amber-500/10 dark:bg-amber-500/20 border-amber-500 text-stone-900 dark:text-stone-100 font-semibold';
+                    optionStyle =
+                      'bg-[#1B2A55] border-[#6C7BFF] text-[#FFFFFF] font-semibold';
                   }
 
                   return (
                     <button
                       key={idx}
+                      type="button"
                       disabled={isAnswerSubmitted}
                       onClick={() => {
                         soundEffects.playClick();
                         setSelectedOption(idx);
                       }}
-                      className={`w-full text-left p-3.5 rounded-2xl border text-xs transition-all flex flex-col gap-0.5 ${optionStyle}`}
+                      className={`w-full text-left p-3.5 rounded-xl border text-sm transition-colors flex items-center gap-3 cursor-pointer disabled:cursor-default ${optionStyle}`}
                     >
-                      <span className="font-medium">{option}</span>
-                      <span className="text-[11px] font-sinhala opacity-75">{currentQ.optionsSi[idx]}</span>
+                      <span
+                        className={`w-6 h-6 rounded-md text-xs font-mono font-bold flex items-center justify-center shrink-0 ${
+                          isSelected || (isAnswerSubmitted && isAnswer)
+                            ? 'bg-[#5B6CFF] text-[#FFFFFF]'
+                            : 'bg-[#0B1124] text-[#94A3B8] border border-[rgba(165,180,252,0.2)]'
+                        }`}
+                      >
+                        {OPTION_LETTERS[idx] ?? idx + 1}
+                      </span>
+                      <span className="flex-1 leading-snug">{option}</span>
+
+                      {isAnswerSubmitted && isAnswer && (
+                        <CheckCircle2 className="w-4 h-4 text-[#34D399] shrink-0" />
+                      )}
+                      {isAnswerSubmitted && isSelected && !isAnswer && (
+                        <AlertCircle className="w-4 h-4 text-[#FB7185] shrink-0" />
+                      )}
                     </button>
                   );
                 })}
               </div>
 
-              {/* Explanation on submit */}
+              {/* Feedback Banner After Answer Submission */}
               {isAnswerSubmitted && (
                 <div
-                  className={`mt-4 p-3.5 rounded-2xl border text-xs flex items-start gap-2.5 ${
+                  className={`mt-4 p-3.5 rounded-xl border text-xs flex items-start gap-2.5 ${
                     isCorrect
-                      ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
-                      : 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+                      ? 'bg-[rgba(2,44,34,0.65)] border-[rgba(52,211,153,0.45)] text-[#D1FAE5]'
+                      : 'bg-[rgba(76,5,25,0.65)] border-[rgba(251,113,133,0.45)] text-[#FFE4E6]'
                   }`}
                 >
                   {isCorrect ? (
-                    <CheckCircle className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-[#34D399]" />
                   ) : (
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#FB7185]" />
                   )}
                   <div>
-                    <p className="font-semibold">{isCorrect ? 'නිවැරදියි! (Correct!)' : 'වැරදියි (Incorrect)'}</p>
-                    <p className="text-[11px] font-sinhala mt-0.5">{currentQ.explanationSi}</p>
+                    <p className="font-bold">
+                      {isCorrect ? 'Correct! · නිවැරදියි!' : 'Not quite right · වැරදියි'}
+                    </p>
+                    <p className="text-xs font-sinhala mt-1 leading-relaxed opacity-90">
+                      {currentQ.explanationSi}
+                    </p>
                   </div>
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="mt-5 flex items-center justify-end gap-2">
+              {/* Bottom Action Buttons */}
+              <div className="mt-6 flex items-center justify-end gap-2">
                 {!isAnswerSubmitted ? (
                   <button
+                    type="button"
                     disabled={selectedOption === null}
                     onClick={handleSubmitAnswer}
-                    className="px-5 py-2.5 rounded-xl bg-amber-500 text-stone-950 text-xs font-bold hover:bg-amber-400 disabled:opacity-40 transition-colors shadow-sm"
+                    className="px-5 py-2.5 rounded-full bg-indigo-cta text-[#FFFFFF] text-xs font-bold disabled:opacity-40 transition-all cursor-pointer whitespace-nowrap"
                   >
-                    පිළිතුර තහවුරු කරන්න · Check
+                    Check Answer · පිළිතුර බලන්න
                   </button>
                 ) : (
                   <button
+                    type="button"
                     onClick={handleNextQuestion}
-                    className="px-5 py-2.5 rounded-xl bg-stone-900 dark:bg-white text-white dark:text-stone-900 text-xs font-semibold hover:opacity-90 transition-opacity"
+                    className="px-5 py-2.5 rounded-full bg-indigo-cta text-[#FFFFFF] text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
                   >
-                    {currentQuestionIndex < story.quiz.length - 1 ? 'ඊළඟ ප්‍රශ්නය · Next' : 'ප්‍රතිඵලය බලන්න · Results'}
+                    {currentQuestionIndex < story.quiz.length - 1
+                      ? 'Next Question · ඊළඟ ප්‍රශ්නය'
+                      : 'See Results · ප්‍රතිඵලය බලන්න'}
                   </button>
                 )}
               </div>
             </div>
           ) : (
-            /* Quiz Completed screen */
             <div className="text-center py-6">
-              <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
-                <Award className="w-8 h-8" />
+              <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-[#1A264B] border border-[rgba(129,140,248,0.28)] flex items-center justify-center text-[#8CA8FF]">
+                <Award className="w-7 h-7" />
               </div>
-              <h3 className="text-lg font-serif font-bold text-stone-900 dark:text-stone-100 mb-1">
-                විශිෂ්ටයි! Quiz Completed!
+              <h3 className="text-xl font-serif font-bold text-[#FFFFFF] mb-1">
+                Quiz Completed! · විශිෂ්ටයි!
               </h3>
-              <p className="text-xs text-stone-600 dark:text-stone-400 mb-5">
-                You scored <span className="font-bold text-amber-500">{score}</span> out of{' '}
-                <span className="font-bold">{story.quiz.length}</span>!
+              <p className="text-sm text-[#CBD5E1] mb-6 tabular-nums">
+                You scored <span className="font-bold text-[#8CA8FF]">{score}</span> out of{' '}
+                <span className="font-bold text-[#FFFFFF]">{story.quiz.length}</span>
               </p>
               <div className="flex items-center justify-center gap-3">
                 <button
+                  type="button"
                   onClick={handleResetQuiz}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-stone-200 dark:border-white/10 text-xs font-medium text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-white/10"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[rgba(165,180,252,0.22)] bg-[#162140] text-xs font-semibold text-[#E2E8F0] hover:bg-[#1E2C54] transition-colors cursor-pointer whitespace-nowrap"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span>නැවත උත්සාහ කරන්න</span>
+                  <span>Try Again</span>
                 </button>
                 <button
+                  type="button"
                   onClick={onClose}
-                  className="px-5 py-2 rounded-xl bg-amber-500 text-stone-950 font-bold text-xs hover:bg-amber-400"
+                  className="px-5 py-2 rounded-full bg-indigo-cta text-[#FFFFFF] font-bold text-xs transition-all cursor-pointer whitespace-nowrap"
                 >
-                  කතාවට ආපසු යන්න · Done
+                  Done · අවසන්
                 </button>
               </div>
             </div>

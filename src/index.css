@@ -2,7 +2,76 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --font-serif: "Lora", Georgia, Cambria, "Times New Roman", serif;
+  --font-sans: "Plus Jakarta Sans", "Noto Sans Sinhala", ui-sans-serif, system-ui, sans-serif;
+  --font-sinhala: "Noto Sans Sinhala", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+
+  /* Explicit sRGB HEX palette overrides for full compatibility with Chrome <= 109 / Windows 7 */
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+
+  --color-indigo-50: #eef2ff;
+  --color-indigo-100: #e0e7ff;
+  --color-indigo-200: #c7d2fe;
+  --color-indigo-300: #a5b4fc;
+  --color-indigo-400: #818cf8;
+  --color-indigo-500: #6366f1;
+  --color-indigo-600: #4f46e5;
+  --color-indigo-700: #4338ca;
+  --color-indigo-800: #3730a3;
+  --color-indigo-900: #312e81;
+  --color-indigo-950: #1e1b4b;
+
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-200: #a7f3d0;
+  --color-emerald-300: #6ee7b7;
+  --color-emerald-400: #34d399;
+  --color-emerald-500: #10b981;
+  --color-emerald-900: #064e3b;
+  --color-emerald-950: #022c22;
+
+  --color-teal-300: #5eead4;
+  --color-teal-950: #042f2e;
+
+  --color-rose-100: #ffe4e6;
+  --color-rose-400: #fb7185;
+  --color-rose-950: #4c0519;
+
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+}
+
+@layer base {
+  html,
+  body {
+    background-color: #080d1c;
+    color: #f1f5f9;
+  }
+
+  ::selection {
+    background-color: rgba(99, 102, 241, 0.35);
+    color: #e0e7ff;
+  }
+}
+
 @layer utilities {
+  .font-sinhala {
+    font-family: var(--font-sinhala);
+  }
   .perspective-2000 {
     perspective: 2000px;
   }
@@ -18,66 +87,63 @@
   }
 }
 
-/* Modern luxury paper textures */
-.modern-paper-light {
-  background-color: #ffffff;
-  background-image: 
-    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 1) 0%, rgba(253, 252, 250, 0.9) 100%),
-    linear-gradient(90deg, rgba(0,0,0,0.015) 0%, rgba(0,0,0,0) 8%, rgba(0,0,0,0) 92%, rgba(0,0,0,0.02) 100%);
+/* Standard sRGB gradients (Chrome 109 / older Chromium compatible — zero oklab) */
+.bg-indigo-cta {
+  background-color: #5b6cff;
+  background-image: linear-gradient(90deg, #5b6cff 0%, #7467f0 100%);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.38);
 }
 
-.modern-paper-dark {
-  background-color: #121418;
-  background-image: 
-    radial-gradient(ellipse at 50% 0%, rgba(30, 34, 42, 0.8) 0%, rgba(18, 20, 24, 0.95) 100%),
-    linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0) 8%, rgba(0,0,0,0) 92%, rgba(0,0,0,0.3) 100%);
+.bg-indigo-cta:hover {
+  background-color: #6b7bff;
+  background-image: linear-gradient(90deg, #6b7bff 0%, #8377f5 100%);
 }
 
-/* Real book page stack edge 3D effect */
-.book-edge-stack-left {
-  box-shadow: 
-    -1px 0 0 1px rgba(0,0,0,0.06),
-    -3px 2px 0 0 rgba(230,225,215,0.8),
-    -5px 3px 0 0 rgba(215,210,200,0.7),
-    -8px 6px 16px -2px rgba(0,0,0,0.18);
+.bg-indigo-tab {
+  background-color: #5b6cff;
+  background-image: linear-gradient(90deg, #5b6cff 0%, #7467f0 100%);
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.34);
 }
 
-.book-edge-stack-right {
-  box-shadow: 
-    1px 0 0 1px rgba(0,0,0,0.06),
-    3px 2px 0 0 rgba(230,225,215,0.8),
-    5px 3px 0 0 rgba(215,210,200,0.7),
-    8px 6px 16px -2px rgba(0,0,0,0.18);
+.text-indigo-gradient {
+  color: #7d9cff;
+  background-image: linear-gradient(90deg, #5f8bff 0%, #7a8eff 52%, #a088ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.dark .book-edge-stack-left {
-  box-shadow: 
-    -1px 0 0 1px rgba(255,255,255,0.04),
-    -3px 2px 0 0 rgba(28,32,38,0.9),
-    -5px 3px 0 0 rgba(20,24,28,0.9),
-    -10px 8px 24px -2px rgba(0,0,0,0.5);
+.cat-fallback-folktales {
+  background-color: #1e1b4b;
+  background-image: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+  color: #a5b4fc;
 }
 
-.dark .book-edge-stack-right {
-  box-shadow: 
-    1px 0 0 1px rgba(255,255,255,0.04),
-    3px 2px 0 0 rgba(28,32,38,0.9),
-    5px 3px 0 0 rgba(20,24,28,0.9),
-    10px 8px 24px -2px rgba(0,0,0,0.5);
+.cat-fallback-village {
+  background-color: #022c22;
+  background-image: linear-gradient(135deg, #022c22 0%, #0f172a 100%);
+  color: #6ee7b7;
 }
 
-/* Realistic spine curvature shadow */
-.book-spine-crease-left {
-  box-shadow: inset -22px 0 28px -12px rgba(0, 0, 0, 0.12);
+.cat-fallback-nature {
+  background-color: #042f2e;
+  background-image: linear-gradient(135deg, #042f2e 0%, #0f172a 100%);
+  color: #5eead4;
 }
-.book-spine-crease-right {
-  box-shadow: inset 22px 0 28px -12px rgba(0, 0, 0, 0.12);
+
+.cat-fallback-heritage {
+  background-color: #0f172a;
+  background-image: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+  color: #c7d2fe;
 }
-.dark .book-spine-crease-left {
-  box-shadow: inset -24px 0 32px -12px rgba(0, 0, 0, 0.45);
-}
-.dark .book-spine-crease-right {
-  box-shadow: inset 24px 0 32px -12px rgba(0, 0, 0, 0.45);
+
+/* Luminous Midnight Navy & Cobalt-Indigo Backdrop matching reference aesthetic */
+.midnight-indigo-backdrop {
+  background-color: #080d1c;
+  background-image:
+    radial-gradient(ellipse 68% 48% at 50% 6%, rgba(67, 97, 238, 0.26) 0%, rgba(30, 58, 138, 0.11) 48%, rgba(8, 13, 28, 0) 78%),
+    radial-gradient(ellipse 46% 36% at 80% 58%, rgba(99, 102, 241, 0.12) 0%, rgba(8, 13, 28, 0) 72%),
+    radial-gradient(ellipse 44% 34% at 18% 72%, rgba(56, 102, 245, 0.08) 0%, rgba(8, 13, 28, 0) 70%);
 }
 
 /* Audio wave animation */

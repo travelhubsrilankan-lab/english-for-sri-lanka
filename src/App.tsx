@@ -2,16 +2,20 @@ import React, { useState } from 'react';
 import { STORIES } from './data/stories';
 import { BookContainer } from './components/BookContainer';
 import { TableOfContentsPage } from './components/TableOfContentsPage';
+import { GamesPage } from './components/GamesPage';
 import { soundEffects } from './utils/audio';
-import { BookOpen, Compass } from 'lucide-react';
+import { BookOpen, Gamepad2 } from 'lucide-react';
+import { StoryCategoryId } from './types/story';
 
 export default function App() {
-  // 'toc' view opens first so user sees the list of stories
-  const [currentView, setCurrentView] = useState<'toc' | 'reader'>('toc');
-  const [currentStoryId, setCurrentStoryId] = useState<string>(STORIES[0].id);
+  const [currentView, setCurrentView] = useState<'toc' | 'reader' | 'games'>('toc');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<StoryCategoryId | null>(null);
+  const [currentStoryId, setCurrentStoryId] = useState<string | null>(STORIES[0]?.id ?? null);
   const [currentChapterNumber, setCurrentChapterNumber] = useState<number>(1);
 
-  const currentStory = STORIES.find((s) => s.id === currentStoryId) || STORIES[0];
+  const currentStory = currentStoryId
+    ? STORIES.find((s) => s.id === currentStoryId)
+    : STORIES[0];
 
   const handleSelectStoryAndChapter = (storyId: string, chapterNumber: number) => {
     setCurrentStoryId(storyId);
@@ -19,55 +23,141 @@ export default function App() {
     setCurrentView('reader');
   };
 
+  const handleGoHome = () => {
+    soundEffects.playClick();
+    setSelectedCategoryId(null);
+    setCurrentView('toc');
+  };
+
+  const handleOpenGames = () => {
+    soundEffects.playClick();
+    setCurrentView('games');
+  };
+
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-stone-900 flex flex-col font-sans antialiased">
-      {/* Simple, Clean Top Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-xs">
-        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-          {/* Logo */}
+    <div className="min-h-screen midnight-indigo-backdrop text-[#F1F5F9] flex flex-col font-sans antialiased">
+      {/* Clean Three-Zone Midnight Glass Top Navigation */}
+      <header className="sticky top-0 z-40 bg-[rgba(8,13,28,0.88)] backdrop-blur-md border-b border-[rgba(165,180,252,0.14)]">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4 lg:gap-8">
+          {/* Zone 1: Brand Wordmark */}
           <button
-            onClick={() => {
-              soundEffects.playClick();
-              setCurrentView('toc');
-            }}
-            className="flex items-center gap-2 text-left cursor-pointer"
+            type="button"
+            onClick={handleGoHome}
+            className="text-xl font-serif font-bold tracking-tight text-[#FFFFFF] whitespace-nowrap shrink-0 cursor-pointer hover:text-[#8FB4FF] transition-colors"
           >
-            <div className="w-9 h-9 rounded-xl bg-amber-500 text-stone-950 font-serif font-bold text-lg flex items-center justify-center shadow-xs">
-              S
-            </div>
-            <div>
-              <span className="text-base font-serif font-bold tracking-tight text-stone-900 block leading-tight">
-                StoryGlow
-              </span>
-              <span className="text-[11px] text-stone-500 font-sinhala block">
-                ඉංග්‍රීසි පුහුණු කතා
-              </span>
-            </div>
+            StoryGlow
           </button>
 
-          {/* Simple Navigation Action */}
-          <button
-            onClick={() => {
-              soundEffects.playClick();
-              setCurrentView('toc');
-            }}
-            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
-              currentView === 'toc'
-                ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                : 'bg-white hover:bg-stone-100 text-stone-700 border border-stone-200'
-            }`}
-          >
-            <Compass className="w-4 h-4 text-amber-600" />
-            <span>කතා ලැයිස්තුව (Stories)</span>
-          </button>
+          {/* Zone 2: Concise Single-Line Category & Games Navigation Links */}
+          <nav className="hidden md:flex items-center gap-3.5 lg:gap-6 text-xs lg:text-sm font-medium text-[#CBD5E1]">
+            <button
+              type="button"
+              onClick={() => {
+                soundEffects.playClick();
+                setSelectedCategoryId('folktales');
+                setCurrentView('toc');
+              }}
+              className={`whitespace-nowrap shrink-0 cursor-pointer transition-colors hover:text-[#FFFFFF] ${
+                currentView === 'toc' && selectedCategoryId === 'folktales'
+                  ? 'text-[#8CA8FF] font-semibold underline decoration-[#5B6CFF] underline-offset-4'
+                  : 'text-[#CBD5E1]'
+              }`}
+            >
+              ජන කතා
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                soundEffects.playClick();
+                setSelectedCategoryId('village');
+                setCurrentView('toc');
+              }}
+              className={`whitespace-nowrap shrink-0 cursor-pointer transition-colors hover:text-[#FFFFFF] ${
+                currentView === 'toc' && selectedCategoryId === 'village'
+                  ? 'text-[#8CA8FF] font-semibold underline decoration-[#5B6CFF] underline-offset-4'
+                  : 'text-[#CBD5E1]'
+              }`}
+            >
+              ගැමි ජීවිතය
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                soundEffects.playClick();
+                setSelectedCategoryId('nature');
+                setCurrentView('toc');
+              }}
+              className={`whitespace-nowrap shrink-0 cursor-pointer transition-colors hover:text-[#FFFFFF] ${
+                currentView === 'toc' && selectedCategoryId === 'nature'
+                  ? 'text-[#8CA8FF] font-semibold underline decoration-[#5B6CFF] underline-offset-4'
+                  : 'text-[#CBD5E1]'
+              }`}
+            >
+              සොබාදහම
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                soundEffects.playClick();
+                setSelectedCategoryId('heritage');
+                setCurrentView('toc');
+              }}
+              className={`whitespace-nowrap shrink-0 cursor-pointer transition-colors hover:text-[#FFFFFF] ${
+                currentView === 'toc' && selectedCategoryId === 'heritage'
+                  ? 'text-[#8CA8FF] font-semibold underline decoration-[#5B6CFF] underline-offset-4'
+                  : 'text-[#CBD5E1]'
+              }`}
+            >
+              උරුමය හා ඉතිහාසය
+            </button>
+            <button
+              type="button"
+              onClick={handleOpenGames}
+              className={`inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors hover:text-[#FFFFFF] ${
+                currentView === 'games'
+                  ? 'text-[#8CA8FF] font-semibold underline decoration-[#5B6CFF] underline-offset-4'
+                  : 'text-[#CBD5E1]'
+              }`}
+            >
+              <Gamepad2 className="w-4 h-4 text-[#8CA8FF]" />
+              <span>Games</span>
+            </button>
+          </nav>
+
+          {/* Zone 3: Mobile Games Link + Primary Contents Action */}
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={handleOpenGames}
+              className={`md:hidden inline-flex items-center gap-1 text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
+                currentView === 'games' ? 'text-[#8CA8FF] underline underline-offset-4' : 'text-[#CBD5E1]'
+              }`}
+            >
+              <Gamepad2 className="w-3.5 h-3.5 text-[#8CA8FF]" />
+              <span>Games</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleGoHome}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-cta text-[#FFFFFF] text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>පටුන (Contents)</span>
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Main Content View */}
-      <main className="flex-1 flex flex-col justify-center items-center py-4 sm:py-6">
-        {currentView === 'toc' ? (
+      {/* Main Content */}
+      <main className="flex-1 w-full">
+        {currentView === 'games' ? (
+          <GamesPage stories={STORIES} onBackToToc={handleGoHome} />
+        ) : currentView === 'toc' || !currentStory ? (
           <TableOfContentsPage
             stories={STORIES}
+            selectedCategoryId={selectedCategoryId}
+            onSelectCategory={setSelectedCategoryId}
             onSelectStoryAndChapter={handleSelectStoryAndChapter}
           />
         ) : (
@@ -83,9 +173,9 @@ export default function App() {
         )}
       </main>
 
-      {/* Simple Footer */}
-      <footer className="py-4 border-t border-stone-200 text-center text-xs text-stone-500 font-sinhala">
-        <p>StoryGlow · ඉංග්‍රීසි ඉගෙන ගන්නා ඔබ සඳහා සරල කෙටි කතා</p>
+      {/* Quiet Editorial Footer */}
+      <footer className="py-5 bg-[rgba(7,11,24,0.82)] border-t border-[rgba(165,180,252,0.12)] text-center text-xs text-[#94A3B8] font-sinhala">
+        <p>StoryGlow · ශ්‍රී ලාංකික පාඨකයන් සඳහා සරල ඉංග්‍රීසි කතා පුස්තකාලය</p>
       </footer>
     </div>
   );

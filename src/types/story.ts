@@ -20,6 +20,8 @@ export interface StorySentence {
 
 export type SceneType = 'garden_seed' | 'fox_star' | 'ocean_lighthouse' | 'none';
 
+export type StoryCategoryId = 'folktales' | 'village' | 'nature' | 'heritage';
+
 export interface Chapter {
   id: string;
   chapterNumber: number;
@@ -40,25 +42,26 @@ export interface Chapter {
 export interface StoryQuizQuestion {
   id: string;
   questionEn: string;
-  questionSi: string;
+  questionSi?: string;
   options: string[];
-  optionsSi: string[];
+  optionsSi?: string[];
   correctIndex: number;
   explanationSi: string;
 }
 
 export interface StoryCategory {
-  id: 'mystery' | 'nature' | 'scifi' | 'kindness';
+  id: StoryCategoryId;
   titleEn: string;
   titleSi: string;
+  shortLabelEn: string;
+  shortLabelSi: string;
   descriptionSi: string;
-  badgeColor: string;
-  coverImage?: string;
+  coverImage: string;
 }
 
 export interface Story {
   id: string;
-  categoryId: 'mystery' | 'nature' | 'scifi' | 'kindness';
+  categoryId: StoryCategoryId;
   categoryTitleEn: string;
   categoryTitleSi: string;
   titleEn: string;
