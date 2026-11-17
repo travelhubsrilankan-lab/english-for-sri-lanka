@@ -203,24 +203,24 @@ export const StoryFillBlankGame: React.FC<StoryFillBlankGameProps> = ({
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2 text-xs text-[#94A3B8] mb-1">
-              <span className="font-semibold text-[#8CA8FF]">Story Fill-in-Blank</span>
+              <span className="font-semibold text-[#8CA8FF]">Fill the Blank</span>
               <span aria-hidden="true">·</span>
               <span>{storyLabel}</span>
               <span aria-hidden="true">·</span>
-              <span className="tabular-nums">{Math.min(ROUNDS_PER_MATCH, pool.length)} Rounds</span>
+              <span className="tabular-nums">{Math.min(ROUNDS_PER_MATCH, pool.length)} Sentences</span>
             </div>
             <h2 className="text-2xl font-serif font-bold text-[#FFFFFF]">
-              Missing Word Story Challenge
+              Missing Word Story
             </h2>
             <p className="text-sm text-[#CBD5E1] mt-1.5 leading-relaxed">
-              Read real English sentences from the stories and pick the missing vocabulary word. Sinhala meanings and sentence translations unlock after you answer.
+              Read a sentence from the story and pick the missing word. You will see the Sinhala meaning after you answer.
             </p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-4 pt-5 border-t border-[rgba(165,180,252,0.14)]">
           <div className="text-xs text-[#94A3B8]">
-            Listen to the complete English sentence after answering.
+            You can listen to the full sentence after you answer.
           </div>
           <button
             type="button"
@@ -243,7 +243,7 @@ export const StoryFillBlankGame: React.FC<StoryFillBlankGameProps> = ({
           <Award className="w-7 h-7" />
         </div>
         <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#FFFFFF]">
-          Story Challenge Complete!
+          Well Done!
         </h2>
         <p className="mt-2 text-sm text-[#CBD5E1] tabular-nums mb-7">
           Score: <span className="font-bold text-[#8CA8FF]">{score}</span>

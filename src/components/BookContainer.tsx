@@ -14,11 +14,20 @@ import {
   CheckCircle2,
   X,
   Languages,
+  Share2,
+  Check,
+  Star,
+  Mic,
+  Sun,
+  Moon,
+  BookText,
 } from 'lucide-react';
 import { speechNarrator, soundEffects } from '../utils/audio';
 import { VocabularyModal } from './VocabularyModal';
 import { QuizModal } from './QuizModal';
+import { SpeakingPracticeModal } from './SpeakingPracticeModal';
 import { STORIES } from '../data/stories';
+import { useUserProgress, ReaderTheme } from '../context/UserProgressContext';
 
 interface BookContainerProps {
   story: Story;
@@ -50,6 +59,22 @@ export const BookContainer: React.FC<BookContainerProps> = ({
   const [inspectingWord, setInspectingWord] = useState<VocabularyWord | null>(null);
   const [isVocabModalOpen, setIsVocabModalOpen] = useState<boolean>(false);
   const [isQuizModalOpen, setIsQuizModalOpen] = useState<boolean>(false);
+  const [speakingSentence, setSpeakingSentence] = useState<StorySentence | null>(null);
+  const [linkCopied, setLinkCopied] = useState<boolean>(false);
+
+  const {
+    readerTheme,
+    readerFontSize,
+    setReaderTheme,
+    setReaderFontSize,
+    toggleSaveWord,
+    isWordSaved,
+    markStoryComplete,
+    completedStoryIds,
+    recordStoryView,
+  } = useUserProgress();
+
+  const isStoryCompleted = completedStoryIds.includes(story.id);
 
   const isPlayingRef = useRef<boolean>(false);
   const advanceTimerRef = useRef<number | null>(null);
@@ -108,6 +133,10 @@ export const BookContainer: React.FC<BookContainerProps> = ({
   }, [story.id, readMode, currentChapterNumber]);
 
   useEffect(() => {
+    recordStoryView(story.id);
+  }, [story.id, recordStoryView]);
+
+  useEffect(() => {
     return () => {
       clearPendingTimer();
       isPlayingRef.current = false;
@@ -126,6 +155,7 @@ export const BookContainer: React.FC<BookContainerProps> = ({
       } else {
         isPlayingRef.current = false;
         setIsPlaying(false);
+        markStoryComplete(story.id);
         soundEffects.playCompletionChime();
       }
       return;
@@ -189,25 +219,178 @@ export const BookContainer: React.FC<BookContainerProps> = ({
     setSpeechRate((prev) => (prev <= 0.85 ? 1.0 : 0.8));
   };
 
+  const handleShareStory = async () => {
+    soundEffects.playClick();
+    const shareUrl = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${story.titleEn} – StoryGlow`,
+          text: `${story.titleEn} (${story.titleSi}) - Read in English with Sinhala meanings on StoryGlow`,
+          url: shareUrl,
+        });
+        return;
+      }
+    } catch {
+      // Cancelled native share sheet or unsupported in embedded iframe; fallback to clipboard
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 2200);
+    } catch {
+      // Ignore clipboard failures
+    }
+  };
+
   let runningGlobalIndex = 0;
+
+  const enFontClasses = [
+    'text-base sm:text-[17px]',
+    'text-lg sm:text-[19px]',
+    'text-xl sm:text-[22px]',
+    'text-[22px] sm:text-[25px]',
+  ];
+  const siFontClasses = [
+    'text-xs sm:text-[13px]',
+    'text-sm',
+    'text-base',
+    'text-base sm:text-[17px]',
+  ];
+  const activeEnFont = enFontClasses[readerFontSize] || enFontClasses[1];
+  const activeSiFont = siFontClasses[readerFontSize] || siFontClasses[1];
+
+  const themePalette: Record<
+    ReaderTheme,
+    {
+      sheet: string;
+      borderSubtle: string;
+      title: string;
+      subtitle: string;
+      meta: string;
+      accent: string;
+      cardIdle: string;
+      cardActive: string;
+      enText: string;
+      siText: string;
+      vocabWord: string;
+      vocabBox: string;
+      vocabTitle: string;
+      vocabSi: string;
+      comfortBar: string;
+      comfortBtnIdle: string;
+      speakBtn: string;
+    }
+  > = {
+    night: {
+      sheet: 'bg-[rgba(15,23,46,0.94)] border-[rgba(165,180,252,0.2)]',
+      borderSubtle: 'border-[rgba(165,180,252,0.16)]',
+      title: 'text-[#FFFFFF]',
+      subtitle: 'text-[#CBD5E1]',
+      meta: 'text-[#94A3B8]',
+      accent: 'text-[#8CA8FF]',
+      cardIdle:
+        'bg-[rgba(18,27,54,0.85)] hover:bg-[#162142] border-[rgba(165,180,252,0.12)]',
+      cardActive:
+        'bg-[#17244A] border-[#6C7BFF] shadow-[0_0_24px_-6px_rgba(99,102,241,0.35)]',
+      enText: 'text-[#F1F5F9]',
+      siText: 'text-[#CBD5E1]',
+      vocabWord: 'text-[#9CB8FF] decoration-[#657BFF] hover:text-[#FFFFFF]',
+      vocabBox:
+        'bg-[#121B36] border-[rgba(165,180,252,0.15)] hover:border-[rgba(108,123,255,0.6)]',
+      vocabTitle: 'text-[#FFFFFF]',
+      vocabSi: 'text-[#9CB8FF]',
+      comfortBar: 'bg-[#0B1124] border-[rgba(165,180,252,0.16)]',
+      comfortBtnIdle: 'text-[#CBD5E1] hover:text-[#FFFFFF] hover:bg-[#182345]',
+      speakBtn:
+        'bg-[#1A264B] hover:bg-[#243566] text-[#9CB8FF] border border-[rgba(129,140,248,0.25)]',
+    },
+    light: {
+      sheet: 'bg-[#F8FAFC] border-[#CBD5E1]',
+      borderSubtle: 'border-[#CBD5E1]',
+      title: 'text-[#0F172A]',
+      subtitle: 'text-[#334155]',
+      meta: 'text-[#475569]',
+      accent: 'text-[#4338CA]',
+      cardIdle: 'bg-[#FFFFFF] hover:bg-[#F1F5F9] border-[#E2E8F0]',
+      cardActive:
+        'bg-[#EEF2FF] border-[#4F46E5] shadow-[0_8px_24px_-8px_rgba(79,70,229,0.25)]',
+      enText: 'text-[#0F172A]',
+      siText: 'text-[#334155]',
+      vocabWord: 'text-[#3730A3] decoration-[#4F46E5] hover:text-[#1E1B4B]',
+      vocabBox: 'bg-[#FFFFFF] border-[#CBD5E1] hover:border-[#4F46E5]',
+      vocabTitle: 'text-[#0F172A]',
+      vocabSi: 'text-[#4338CA]',
+      comfortBar: 'bg-[#E2E8F0] border-[#CBD5E1]',
+      comfortBtnIdle: 'text-[#334155] hover:text-[#0F172A] hover:bg-[#CBD5E1]',
+      speakBtn: 'bg-[#E0E7FF] hover:bg-[#C7D2FE] text-[#3730A3] border border-[#A5B4FC]',
+    },
+    sepia: {
+      sheet: 'bg-[#F5EBD6] border-[#D6C3A0]',
+      borderSubtle: 'border-[#D6C3A0]',
+      title: 'text-[#2C1E12]',
+      subtitle: 'text-[#4A3525]',
+      meta: 'text-[#6E533E]',
+      accent: 'text-[#8B4513]',
+      cardIdle: 'bg-[#FAF3E3] hover:bg-[#F2E6CC] border-[#DFCFAF]',
+      cardActive:
+        'bg-[#EFE1C6] border-[#9A5B25] shadow-[0_8px_24px_-8px_rgba(139,69,19,0.2)]',
+      enText: 'text-[#24170D]',
+      siText: 'text-[#4A3525]',
+      vocabWord: 'text-[#7C2D12] decoration-[#B45309] hover:text-[#451A03]',
+      vocabBox: 'bg-[#FAF3E3] border-[#D6C3A0] hover:border-[#9A5B25]',
+      vocabTitle: 'text-[#2C1E12]',
+      vocabSi: 'text-[#8B4513]',
+      comfortBar: 'bg-[#E9DBBF] border-[#D6C3A0]',
+      comfortBtnIdle: 'text-[#4A3525] hover:text-[#2C1E12] hover:bg-[#DFCFAF]',
+      speakBtn: 'bg-[#EEDEC0] hover:bg-[#E4CFA8] text-[#7C2D12] border border-[#C8AD82]',
+    },
+  };
+
+  const t = themePalette[readerTheme];
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 flex flex-col items-center">
       {/* Top Reader Controls Bar */}
       <div className="w-full flex flex-wrap items-center justify-between gap-3 mb-5">
-        <button
-          type="button"
-          onClick={() => {
-            clearPendingTimer();
-            isPlayingRef.current = false;
-            speechNarrator.stop();
-            onBackToStories();
-          }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] text-[#E2E8F0] border border-[rgba(165,180,252,0.22)] text-xs sm:text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0"
-        >
-          <ArrowLeft className="w-4 h-4 text-[#8CA8FF]" />
-          <span>පටුනට (Categories)</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              clearPendingTimer();
+              isPlayingRef.current = false;
+              speechNarrator.stop();
+              onBackToStories();
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] text-[#E2E8F0] border border-[rgba(165,180,252,0.22)] text-xs sm:text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0"
+          >
+            <ArrowLeft className="w-4 h-4 text-[#8CA8FF]" />
+            <span>පටුනට (Categories)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleShareStory}
+            aria-label="Share story link"
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-xs sm:text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+              linkCopied
+                ? 'bg-[rgba(16,185,129,0.16)] border-[rgba(52,211,153,0.45)] text-[#6EE7B7]'
+                : 'bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] text-[#CBD5E1] hover:text-[#FFFFFF] border-[rgba(165,180,252,0.22)]'
+            }`}
+          >
+            {linkCopied ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-[#6EE7B7]" />
+                <span>Link Copied!</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="w-3.5 h-3.5 text-[#8CA8FF]" />
+                <span>Share</span>
+              </>
+            )}
+          </button>
+        </div>
 
         {/* Right Controls */}
         <div className="flex flex-wrap items-center gap-2">
@@ -314,12 +497,94 @@ export const BookContainer: React.FC<BookContainerProps> = ({
         </div>
       )}
 
-      {/* Main Dark Glass Storybook Sheet */}
-      <article className="w-full bg-[rgba(15,23,46,0.94)] backdrop-blur-md rounded-3xl p-6 sm:p-9 border border-[rgba(165,180,252,0.2)] shadow-[0_24px_70px_-12px_rgba(0,0,0,0.75)] flex flex-col justify-between">
+      {/* Reading Comfort & Theme Strip */}
+      <div
+        className={`w-full mb-4 px-4 py-2.5 rounded-2xl border flex flex-wrap items-center justify-between gap-3 ${t.comfortBar}`}
+      >
+        <div className="flex items-center gap-2 text-xs">
+          <span className={`font-semibold ${t.meta}`}>Text Size:</span>
+          <div className="inline-flex items-center gap-1">
+            <button
+              type="button"
+              disabled={readerFontSize <= 0}
+              onClick={() => {
+                soundEffects.playClick();
+                setReaderFontSize(readerFontSize - 1);
+              }}
+              className={`px-2.5 py-1 rounded-lg font-bold border border-transparent disabled:opacity-40 cursor-pointer ${t.comfortBtnIdle}`}
+              title="Smaller text"
+            >
+              A-
+            </button>
+            <button
+              type="button"
+              disabled={readerFontSize >= 3}
+              onClick={() => {
+                soundEffects.playClick();
+                setReaderFontSize(readerFontSize + 1);
+              }}
+              className={`px-2.5 py-1 rounded-lg font-bold border border-transparent disabled:opacity-40 cursor-pointer ${t.comfortBtnIdle}`}
+              title="Larger text"
+            >
+              A+
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <span className={`font-semibold mr-1 ${t.meta}`}>Theme:</span>
+          <button
+            type="button"
+            onClick={() => {
+              soundEffects.playClick();
+              setReaderTheme('night');
+            }}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold cursor-pointer transition-colors ${
+              readerTheme === 'night' ? 'bg-indigo-tab text-[#FFFFFF]' : t.comfortBtnIdle
+            }`}
+          >
+            <Moon className="w-3.5 h-3.5" />
+            <span>Night</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              soundEffects.playClick();
+              setReaderTheme('light');
+            }}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold cursor-pointer transition-colors ${
+              readerTheme === 'light' ? 'bg-indigo-tab text-[#FFFFFF]' : t.comfortBtnIdle
+            }`}
+          >
+            <Sun className="w-3.5 h-3.5" />
+            <span>Light</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              soundEffects.playClick();
+              setReaderTheme('sepia');
+            }}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold cursor-pointer transition-colors ${
+              readerTheme === 'sepia' ? 'bg-indigo-tab text-[#FFFFFF]' : t.comfortBtnIdle
+            }`}
+          >
+            <BookText className="w-3.5 h-3.5" />
+            <span>Sepia</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Main Reader Storybook Sheet */}
+      <article
+        className={`w-full backdrop-blur-md rounded-3xl p-6 sm:p-9 border shadow-[0_24px_70px_-12px_rgba(0,0,0,0.45)] flex flex-col justify-between transition-colors ${t.sheet}`}
+      >
         {/* Compact Story Title & Artwork Banner */}
-        <header className="pb-5 mb-6 border-b border-[rgba(165,180,252,0.16)] flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+        <header
+          className={`pb-5 mb-6 border-b flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 ${t.borderSubtle}`}
+        >
           {story.coverImage && (
-            <div className="w-28 sm:w-32 aspect-[4/3] rounded-xl overflow-hidden shrink-0 border border-[rgba(165,180,252,0.22)] bg-[#090F22] shadow-[0_10px_24px_-8px_rgba(0,0,0,0.6)]">
+            <div className="w-28 sm:w-32 aspect-[4/3] rounded-xl overflow-hidden shrink-0 border border-[rgba(165,180,252,0.22)] bg-[#090F22] shadow-[0_10px_24px_-8px_rgba(0,0,0,0.45)]">
               <img
                 src={story.coverImage}
                 alt={`${story.titleEn} - ${story.titleSi}`}
@@ -330,20 +595,31 @@ export const BookContainer: React.FC<BookContainerProps> = ({
           )}
 
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-[#94A3B8] mb-2">
-              <span className="text-[#8CA8FF] font-semibold">{story.categoryTitleEn}</span>
+            <div className={`flex flex-wrap items-center gap-2 text-xs font-medium mb-2 ${t.meta}`}>
+              <span className={`font-semibold ${t.accent}`}>{story.categoryTitleEn}</span>
               <span aria-hidden="true">·</span>
               <span className="font-sinhala">{story.categoryTitleSi}</span>
               <span aria-hidden="true">·</span>
               <span>{story.level}</span>
               <span aria-hidden="true">·</span>
               <span className="tabular-nums">{story.estimatedMinutes} min read</span>
+              {isStoryCompleted && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span className="inline-flex items-center gap-1 font-sinhala font-bold text-[#10B981]">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>කියවා අවසන්</span>
+                  </span>
+                </>
+              )}
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#FFFFFF] tracking-tight">
+            <h1 className={`text-2xl sm:text-3xl font-serif font-bold tracking-tight ${t.title}`}>
               {readMode === 'full' ? story.titleEn : currentChapter.titleEn}
             </h1>
-            <p className="text-sm sm:text-base font-sinhala text-[#CBD5E1] font-medium mt-1 tracking-[0.01em]">
+            <p
+              className={`text-sm sm:text-base font-sinhala font-medium mt-1 tracking-[0.01em] ${t.subtitle}`}
+            >
               {readMode === 'full' ? story.titleSi : currentChapter.titleSi}
             </p>
           </div>
@@ -354,12 +630,12 @@ export const BookContainer: React.FC<BookContainerProps> = ({
           <div className="space-y-8">
             {story.chapters.map((chapter) => (
               <section key={chapter.id} className="space-y-3.5">
-                <div className="flex items-center gap-2 text-xs text-[#94A3B8] border-b border-[rgba(165,180,252,0.12)] pb-2">
-                  <span className="font-mono font-semibold text-[#8CA8FF] tabular-nums">
+                <div className={`flex items-center gap-2 text-xs border-b pb-2 ${t.meta} ${t.borderSubtle}`}>
+                  <span className={`font-mono font-semibold tabular-nums ${t.accent}`}>
                     0{chapter.chapterNumber}
                   </span>
                   <span aria-hidden="true">·</span>
-                  <span className="font-serif font-semibold text-[#E2E8F0]">{chapter.titleEn}</span>
+                  <span className={`font-serif font-semibold ${t.subtitle}`}>{chapter.titleEn}</span>
                   <span aria-hidden="true">·</span>
                   <span className="font-sinhala">{chapter.titleSi}</span>
                 </div>
@@ -376,43 +652,61 @@ export const BookContainer: React.FC<BookContainerProps> = ({
                           soundEffects.playClick();
                           playSentence(globalIdx, isPlayingRef.current);
                         }}
-                        className={`p-4 sm:p-5 rounded-2xl transition-all cursor-pointer ${
-                          isActive
-                            ? 'bg-[#17244A] border border-[#6C7BFF] shadow-[0_0_24px_-6px_rgba(99,102,241,0.35)]'
-                            : 'bg-[rgba(18,27,54,0.85)] hover:bg-[#162142] border border-[rgba(165,180,252,0.12)]'
+                        className={`p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer ${
+                          isActive ? t.cardActive : t.cardIdle
                         }`}
                       >
-                        <p className="text-lg sm:text-[19px] font-serif leading-relaxed text-[#F1F5F9] tracking-[0.005em]">
-                          {sentence.words.map((w, wIdx) => {
-                            const hasVocab = !!w.vocab;
-                            return (
-                              <span
-                                key={wIdx}
-                                onClick={(e) => {
-                                  if (hasVocab) {
-                                    e.stopPropagation();
-                                    handleWordClick(w.vocab);
+                        <div className="flex items-start justify-between gap-3">
+                          <p
+                            className={`flex-1 font-serif leading-relaxed tracking-[0.005em] ${activeEnFont} ${t.enText}`}
+                          >
+                            {sentence.words.map((w, wIdx) => {
+                              const hasVocab = !!w.vocab;
+                              return (
+                                <span
+                                  key={wIdx}
+                                  onClick={(e) => {
+                                    if (hasVocab) {
+                                      e.stopPropagation();
+                                      handleWordClick(w.vocab);
+                                    }
+                                  }}
+                                  className={`inline-block mr-1.5 transition-colors ${
+                                    hasVocab
+                                      ? `font-medium underline decoration-2 underline-offset-4 cursor-pointer ${t.vocabWord}`
+                                      : ''
+                                  }`}
+                                  title={
+                                    hasVocab
+                                      ? `සිංහල තේරුම: ${w.vocab?.sinhalaMeaning}`
+                                      : undefined
                                   }
-                                }}
-                                className={`inline-block mr-1.5 transition-colors ${
-                                  hasVocab
-                                    ? 'text-[#9CB8FF] font-medium underline decoration-[#657BFF] decoration-2 underline-offset-4 hover:text-[#FFFFFF] cursor-pointer'
-                                    : ''
-                                }`}
-                                title={
-                                  hasVocab
-                                    ? `සිංහල තේරුම: ${w.vocab?.sinhalaMeaning}`
-                                    : undefined
-                                }
-                              >
-                                {w.displayWord}
-                              </span>
-                            );
-                          })}
-                        </p>
+                                >
+                                  {w.displayWord}
+                                </span>
+                              );
+                            })}
+                          </p>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              soundEffects.playClick();
+                              setSpeakingSentence(sentence);
+                            }}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold shrink-0 transition-colors cursor-pointer ${t.speakBtn}`}
+                            title="Practice speaking this sentence"
+                          >
+                            <Mic className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Speak</span>
+                          </button>
+                        </div>
 
                         {showSinhala && (
-                          <p className="text-sm font-sinhala text-[#CBD5E1] mt-2.5 leading-relaxed tracking-[0.01em]">
+                          <p
+                            className={`font-sinhala mt-2.5 leading-relaxed tracking-[0.01em] ${activeSiFont} ${t.siText}`}
+                          >
                             {sentence.sinhalaTranslation}
                           </p>
                         )}
@@ -435,41 +729,59 @@ export const BookContainer: React.FC<BookContainerProps> = ({
                     soundEffects.playClick();
                     playSentence(sIdx, isPlayingRef.current);
                   }}
-                  className={`p-4 sm:p-5 rounded-2xl transition-all cursor-pointer ${
-                    isActive
-                      ? 'bg-[#17244A] border border-[#6C7BFF] shadow-[0_0_24px_-6px_rgba(99,102,241,0.35)]'
-                      : 'bg-[rgba(18,27,54,0.85)] hover:bg-[#162142] border border-[rgba(165,180,252,0.12)]'
+                  className={`p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer ${
+                    isActive ? t.cardActive : t.cardIdle
                   }`}
                 >
-                  <p className="text-lg sm:text-[19px] font-serif leading-relaxed text-[#F1F5F9] tracking-[0.005em]">
-                    {sentence.words.map((w, wIdx) => {
-                      const hasVocab = !!w.vocab;
-                      return (
-                        <span
-                          key={wIdx}
-                          onClick={(e) => {
-                            if (hasVocab) {
-                              e.stopPropagation();
-                              handleWordClick(w.vocab);
+                  <div className="flex items-start justify-between gap-3">
+                    <p
+                      className={`flex-1 font-serif leading-relaxed tracking-[0.005em] ${activeEnFont} ${t.enText}`}
+                    >
+                      {sentence.words.map((w, wIdx) => {
+                        const hasVocab = !!w.vocab;
+                        return (
+                          <span
+                            key={wIdx}
+                            onClick={(e) => {
+                              if (hasVocab) {
+                                e.stopPropagation();
+                                handleWordClick(w.vocab);
+                              }
+                            }}
+                            className={`inline-block mr-1.5 transition-colors ${
+                              hasVocab
+                                ? `font-medium underline decoration-2 underline-offset-4 cursor-pointer ${t.vocabWord}`
+                                : ''
+                            }`}
+                            title={
+                              hasVocab ? `සිංහල තේරුම: ${w.vocab?.sinhalaMeaning}` : undefined
                             }
-                          }}
-                          className={`inline-block mr-1.5 transition-colors ${
-                            hasVocab
-                              ? 'text-[#9CB8FF] font-medium underline decoration-[#657BFF] decoration-2 underline-offset-4 hover:text-[#FFFFFF] cursor-pointer'
-                              : ''
-                          }`}
-                          title={
-                            hasVocab ? `සිංහල තේරුම: ${w.vocab?.sinhalaMeaning}` : undefined
-                          }
-                        >
-                          {w.displayWord}
-                        </span>
-                      );
-                    })}
-                  </p>
+                          >
+                            {w.displayWord}
+                          </span>
+                        );
+                      })}
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        soundEffects.playClick();
+                        setSpeakingSentence(sentence);
+                      }}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold shrink-0 transition-colors cursor-pointer ${t.speakBtn}`}
+                      title="Practice speaking this sentence"
+                    >
+                      <Mic className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Speak</span>
+                    </button>
+                  </div>
 
                   {showSinhala && (
-                    <p className="text-sm font-sinhala text-[#CBD5E1] mt-2.5 leading-relaxed tracking-[0.01em]">
+                    <p
+                      className={`font-sinhala mt-2.5 leading-relaxed tracking-[0.01em] ${activeSiFont} ${t.siText}`}
+                    >
                       {sentence.sinhalaTranslation}
                     </p>
                   )}
@@ -481,40 +793,60 @@ export const BookContainer: React.FC<BookContainerProps> = ({
 
         {/* Key Vocabulary Reference Section */}
         {visibleVocabulary.length > 0 && (
-          <div className="mt-8 pt-6 border-t border-[rgba(165,180,252,0.16)]">
+          <div className={`mt-8 pt-6 border-t ${t.borderSubtle}`}>
             <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-              <h2 className="text-xs font-bold text-[#E2E8F0] font-sinhala">
+              <h2 className={`text-xs font-bold font-sinhala ${t.subtitle}`}>
                 ප්‍රධාන ඉංග්‍රීසි වචන ({visibleVocabulary.length})
               </h2>
-              <span className="text-xs text-[#94A3B8] font-sinhala">
-                උච්චාරණය ඇසීමට වචනය මත ක්ලික් කරන්න
+              <span className={`text-xs font-sinhala ${t.meta}`}>
+                ⭐ ඔබේ Wordbook එකට Save කිරීමට තරු සලකුණ ඔබන්න
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-              {visibleVocabulary.map((vocab) => (
-                <button
-                  key={vocab.word}
-                  type="button"
-                  onClick={() => handleWordClick(vocab)}
-                  className="p-3 rounded-xl bg-[#121B36] border border-[rgba(165,180,252,0.15)] hover:border-[rgba(108,123,255,0.6)] text-left transition-colors flex items-center justify-between gap-2 cursor-pointer"
-                >
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-[#FFFFFF] truncate">{vocab.word}</p>
-                    <p className="text-xs font-sinhala text-[#9CB8FF] font-medium truncate">
-                      {vocab.sinhalaMeaning}
-                    </p>
+              {visibleVocabulary.map((vocab) => {
+                const saved = isWordSaved(vocab.word);
+                return (
+                  <div
+                    key={vocab.word}
+                    onClick={() => handleWordClick(vocab)}
+                    className={`p-3 rounded-xl border text-left transition-colors flex items-center justify-between gap-2 cursor-pointer ${t.vocabBox}`}
+                  >
+                    <div className="min-w-0">
+                      <p className={`text-xs font-bold truncate ${t.vocabTitle}`}>{vocab.word}</p>
+                      <p className={`text-xs font-sinhala font-medium truncate ${t.vocabSi}`}>
+                        {vocab.sinhalaMeaning}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          soundEffects.playClick();
+                          toggleSaveWord(vocab, story.id);
+                        }}
+                        className="p-1.5 rounded-lg hover:bg-[rgba(251,191,36,0.18)] transition-colors cursor-pointer"
+                        title={saved ? 'Remove from Wordbook' : 'Save to Wordbook'}
+                      >
+                        <Star
+                          className={`w-3.5 h-3.5 ${
+                            saved ? 'fill-[#FBBF24] text-[#FBBF24]' : t.meta
+                          }`}
+                        />
+                      </button>
+                      <Volume2 className={`w-3.5 h-3.5 ${t.accent}`} />
+                    </div>
                   </div>
-                  <Volume2 className="w-3.5 h-3.5 text-[#8CA8FF] shrink-0" />
-                </button>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
 
         {/* Bottom Action Row */}
         {readMode === 'parts' && currentChapterNumber < story.chapters.length ? (
-          <div className="mt-8 pt-5 border-t border-[rgba(165,180,252,0.16)] flex justify-end">
+          <div className={`mt-8 pt-5 border-t flex justify-end ${t.borderSubtle}`}>
             <button
               type="button"
               onClick={() => {
@@ -528,11 +860,27 @@ export const BookContainer: React.FC<BookContainerProps> = ({
             </button>
           </div>
         ) : (
-          <div className="mt-8 pt-5 border-t border-[rgba(165,180,252,0.16)] flex flex-wrap items-center justify-between gap-3">
-            <span className="inline-flex items-center gap-2 text-xs font-semibold text-[#6EE7B7] font-sinhala">
-              <CheckCircle2 className="w-4 h-4 text-[#34D399]" />
-              <span>කතාව කියවා අවසන් කළ හැක (Complete & Practice)</span>
-            </span>
+          <div
+            className={`mt-8 pt-5 border-t flex flex-wrap items-center justify-between gap-3 ${t.borderSubtle}`}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                soundEffects.playCompletionChime();
+                markStoryComplete(story.id);
+              }}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold font-sinhala transition-colors cursor-pointer ${
+                isStoryCompleted
+                  ? 'bg-[rgba(16,185,129,0.2)] border border-[rgba(52,211,153,0.45)] text-[#10B981]'
+                  : 'bg-[#182242] hover:bg-[#1F2D57] border border-[rgba(165,180,252,0.22)] text-[#E2E8F0]'
+              }`}
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>
+                {isStoryCompleted ? 'කියවා අවසන් (Completed ✔)' : 'කතාව අවසන් ලෙස සලකුණු කරන්න ✔'}
+              </span>
+            </button>
+
             <div className="flex items-center gap-2">
               {story.quiz.length > 0 && (
                 <button
@@ -632,6 +980,26 @@ export const BookContainer: React.FC<BookContainerProps> = ({
             <div className="flex items-center gap-1">
               <button
                 type="button"
+                onClick={() => {
+                  soundEffects.playClick();
+                  toggleSaveWord(inspectingWord, story.id);
+                }}
+                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  isWordSaved(inspectingWord.word)
+                    ? 'bg-[rgba(251,191,36,0.18)] text-[#FCD34D] border border-[rgba(251,191,36,0.4)]'
+                    : 'bg-[#1A264B] text-[#CBD5E1] hover:text-[#FFFFFF]'
+                }`}
+                title="Save word to My Wordbook"
+              >
+                <Star
+                  className={`w-3.5 h-3.5 ${
+                    isWordSaved(inspectingWord.word) ? 'fill-[#FBBF24] text-[#FBBF24]' : ''
+                  }`}
+                />
+                <span>{isWordSaved(inspectingWord.word) ? 'Saved' : 'Save'}</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => speechNarrator.speakWord(inspectingWord.word)}
                 className="p-1.5 rounded-lg bg-[#1A264B] text-[#9CB8FF] hover:bg-[#233366] transition-colors cursor-pointer"
                 title="නැවත අසන්න"
@@ -661,7 +1029,7 @@ export const BookContainer: React.FC<BookContainerProps> = ({
         </div>
       )}
 
-      {/* Vocabulary & Quiz Modals */}
+      {/* Vocabulary, Quiz & Speaking Practice Modals */}
       <VocabularyModal
         isOpen={isVocabModalOpen}
         onClose={() => setIsVocabModalOpen(false)}
@@ -673,6 +1041,13 @@ export const BookContainer: React.FC<BookContainerProps> = ({
         isOpen={isQuizModalOpen}
         onClose={() => setIsQuizModalOpen(false)}
         story={story}
+      />
+
+      <SpeakingPracticeModal
+        isOpen={!!speakingSentence}
+        onClose={() => setSpeakingSentence(null)}
+        sentenceText={speakingSentence?.englishText || ''}
+        sinhalaTranslation={speakingSentence?.sinhalaTranslation}
       />
     </div>
   );

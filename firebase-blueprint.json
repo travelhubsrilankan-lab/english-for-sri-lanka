@@ -1,0 +1,182 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Learner profile storing reading progress, quiz scores, game high scores, daily streak, and reader display preferences.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the learner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Public display name from Google Sign-In.",
+          "minLength": 0,
+          "maxLength": 100
+        },
+        "completedStoryIds": {
+          "type": "array",
+          "description": "List of completed story IDs (bounded to 100)."
+        },
+        "quizScores": {
+          "type": "object",
+          "description": "Map of story ID to best percentage/score number."
+        },
+        "gameBestScores": {
+          "type": "object",
+          "description": "Map of game ID to best score."
+        },
+        "streakCount": {
+          "type": "integer",
+          "description": "Consecutive days of reading or practice."
+        },
+        "lastReadDate": {
+          "type": "string",
+          "description": "Last active date in YYYY-MM-DD format.",
+          "maxLength": 20
+        },
+        "readerTheme": {
+          "type": "string",
+          "description": "Preferred story sheet theme.",
+          "enum": ["night", "light", "sepia"],
+          "maxLength": 16
+        },
+        "readerFontSize": {
+          "type": "integer",
+          "description": "Font size index (0 to 3)."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": ["uid", "completedStoryIds", "streakCount", "lastReadDate", "updatedAt"]
+    },
+    "SavedWord": {
+      "title": "SavedWord",
+      "description": "Bookmarked English vocabulary word saved in a learner's My Wordbook for flashcard practice.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "word": {
+          "type": "string",
+          "description": "English word.",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "phonetic": {
+          "type": "string",
+          "description": "IPA phonetic pronunciation.",
+          "maxLength": 80
+        },
+        "sinhalaMeaning": {
+          "type": "string",
+          "description": "Sinhala translation of the word.",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "englishDefinition": {
+          "type": "string",
+          "description": "Simple English definition.",
+          "maxLength": 300
+        },
+        "partOfSpeech": {
+          "type": "string",
+          "description": "Grammatical part of speech.",
+          "maxLength": 30
+        },
+        "storyId": {
+          "type": "string",
+          "description": "ID of the story where the word was bookmarked.",
+          "maxLength": 80
+        },
+        "mastered": {
+          "type": "boolean",
+          "description": "Whether the learner marked this flashcard as mastered."
+        },
+        "savedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when saved or updated."
+        }
+      },
+      "required": ["userId", "word", "sinhalaMeaning", "mastered", "savedAt"]
+    },
+    "DailyAnalytics": {
+      "title": "DailyAnalytics",
+      "description": "Aggregate non-PII daily visitor count per calendar date.",
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "description": "Calendar date YYYY-MM-DD.",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "maxLength": 10
+        },
+        "visits": {
+          "type": "integer",
+          "description": "Cumulative visitor count for the date."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp."
+        }
+      },
+      "required": ["date", "visits", "updatedAt"]
+    },
+    "StoryAnalytics": {
+      "title": "StoryAnalytics",
+      "description": "Aggregate non-PII read counter for a story.",
+      "type": "object",
+      "properties": {
+        "storyId": {
+          "type": "string",
+          "description": "Story identifier.",
+          "minLength": 1,
+          "maxLength": 100,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "views": {
+          "type": "integer",
+          "description": "Cumulative read count for this story."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp."
+        }
+      },
+      "required": ["storyId", "views", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private cloud sync document for a signed-in learner."
+    },
+    "/users/{userId}/savedWords/{wordId}": {
+      "schema": { "$ref": "#/entities/SavedWord" },
+      "description": "Private collection of bookmarked vocabulary words for flashcards."
+    },
+    "/analytics_daily/{dateId}": {
+      "schema": { "$ref": "#/entities/DailyAnalytics" },
+      "description": "Public aggregate daily visitor counters."
+    },
+    "/analytics_stories/{storyId}": {
+      "schema": { "$ref": "#/entities/StoryAnalytics" },
+      "description": "Public aggregate story read counters."
+    }
+  }
+}

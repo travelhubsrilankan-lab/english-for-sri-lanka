@@ -1,71 +1,100 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Story, VocabularyWord } from '../types/story';
 import { WordMatchGame } from './games/WordMatchGame';
 import { WordScrambleGame } from './games/WordScrambleGame';
 import { StoryFillBlankGame } from './games/StoryFillBlankGame';
+import { SpeedSpellGame } from './games/SpeedSpellGame';
+import { MeaningDetectiveGame } from './games/MeaningDetectiveGame';
 import { soundEffects } from '../utils/audio';
+import { ActiveGameId } from '../utils/router';
+import { useUserProgress } from '../context/UserProgressContext';
 import {
   ArrowLeft,
   ArrowRight,
   Grid2X2,
   SpellCheck2,
   BookOpenCheck,
+  Zap,
+  Search,
   Layers,
   Gamepad2,
   Trophy,
+  Share2,
+  Check,
 } from 'lucide-react';
 
 interface GamesPageProps {
   stories: Story[];
+  selectedGameId?: ActiveGameId | null;
+  onSelectGame?: (gameId: ActiveGameId | null) => void;
   onBackToToc: () => void;
 }
-
-type ActiveGameId = 'match' | 'scramble' | 'cloze' | null;
 
 interface BestScores {
   match: number;
   scramble: number;
   cloze: number;
+  speed: number;
+  detective: number;
 }
 
-const STORAGE_KEY = 'storyglow_game_best_scores';
+export const GamesPage: React.FC<GamesPageProps> = ({
+  stories,
+  selectedGameId,
+  onSelectGame,
+  onBackToToc,
+}) => {
+  const { gameBestScores, updateGameBestScore } = useUserProgress();
+  const [internalActiveGame, setInternalActiveGame] = useState<ActiveGameId | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const activeGame = onSelectGame ? (selectedGameId ?? null) : internalActiveGame;
 
-export const GamesPage: React.FC<GamesPageProps> = ({ stories, onBackToToc }) => {
-  const [activeGame, setActiveGame] = useState<ActiveGameId>(null);
-  const [selectedStoryId, setSelectedStoryId] = useState<string>('all');
-  const [bestScores, setBestScores] = useState<BestScores>({
-    match: 0,
-    scramble: 0,
-    cloze: 0,
-  });
+  const selectGame = (gameId: ActiveGameId | null) => {
+    if (onSelectGame) {
+      onSelectGame(gameId);
+    } else {
+      setInternalActiveGame(gameId);
+    }
+  };
 
-  useEffect(() => {
+  const handleShareGames = async () => {
+    soundEffects.playClick();
+    const shareUrl = window.location.href;
+    const shareTitle = activeGame
+      ? `Play StoryGlow Word Game`
+      : 'StoryGlow English Word Games';
     try {
-      const saved = window.localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved) as Partial<BestScores>;
-        setBestScores({
-          match: Number(parsed.match) || 0,
-          scramble: Number(parsed.scramble) || 0,
-          cloze: Number(parsed.cloze) || 0,
+      if (navigator.share) {
+        await navigator.share({
+          title: shareTitle,
+          text: 'Practice English words from Sri Lankan stories on StoryGlow!',
+          url: shareUrl,
         });
+        return;
       }
     } catch {
-      // Ignore storage access restrictions
+      // User cancelled native share or fallback to clipboard
     }
-  }, []);
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedLink(true);
+      window.setTimeout(() => setCopiedLink(false), 2200);
+    } catch {
+      // Clipboard blocked in restricted frame
+    }
+  };
+
+  const [selectedStoryId, setSelectedStoryId] = useState<string>('all');
+  const bestScores: BestScores = {
+    match: Number(gameBestScores.match) || 0,
+    scramble: Number(gameBestScores.scramble) || 0,
+    cloze: Number(gameBestScores.cloze) || 0,
+    speed: Number(gameBestScores.speed) || 0,
+    detective: Number(gameBestScores.detective) || 0,
+  };
 
   const updateBestScore = (game: keyof BestScores, newScore: number) => {
-    setBestScores((prev) => {
-      if (newScore <= prev[game]) return prev;
-      const updated = { ...prev, [game]: newScore };
-      try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      } catch {
-        // ignore storage restrictions
-      }
-      return updated;
-    });
+    updateGameBestScore(game, newScore);
   };
 
   // Build deduplicated vocabulary pool across selected stories or all stories
@@ -107,9 +136,9 @@ export const GamesPage: React.FC<GamesPageProps> = ({ stories, onBackToToc }) =>
       id: 'match' as const,
       num: '01',
       titleEn: 'Word Match Memory',
-      subtitleEn: 'Word to Meaning Pairs',
+      subtitleEn: 'Match Words & Meanings',
       descEn:
-        'Flip cards to match each English word with its English clue. Sinhala meanings unlock once a pair is matched.',
+        'Tap two cards to match a word with its meaning. Sinhala meaning shows after you match.',
       badgeInfo: '6 – 10 Pairs',
       bestScore: bestScores.match,
       icon: Grid2X2,
@@ -118,9 +147,9 @@ export const GamesPage: React.FC<GamesPageProps> = ({ stories, onBackToToc }) =>
       id: 'scramble' as const,
       num: '02',
       titleEn: 'Word Scramble',
-      subtitleEn: 'Letter Tile Builder',
+      subtitleEn: 'Put Letters in Order',
       descEn:
-        'Arrange shuffled letters to spell the English word from its definition and audio clue. Reveals Sinhala meaning on solve.',
+        'Read the clue or listen, then tap letters to make the word. Sinhala meaning shows after you answer.',
       badgeInfo: '8 Words',
       bestScore: bestScores.scramble,
       icon: SpellCheck2,
@@ -129,12 +158,34 @@ export const GamesPage: React.FC<GamesPageProps> = ({ stories, onBackToToc }) =>
       id: 'cloze' as const,
       num: '03',
       titleEn: 'Missing Word Story',
-      subtitleEn: 'Context Sentence Challenge',
+      subtitleEn: 'Finish the Sentence',
       descEn:
-        'Pick the missing English word to complete real story sentences. Full Sinhala translation appears after answering.',
+        'Pick the right word to complete a story sentence. Sinhala meaning shows after you answer.',
       badgeInfo: '8 Sentences',
       bestScore: bestScores.cloze,
       icon: BookOpenCheck,
+    },
+    {
+      id: 'speed' as const,
+      num: '04',
+      titleEn: 'Speed Spell',
+      subtitleEn: 'Fast 45-Second Game',
+      descEn:
+        'Spell as many words as you can in 45 seconds. Right answers give +3 seconds! Sinhala shows after.',
+      badgeInfo: '45 Seconds',
+      bestScore: bestScores.speed,
+      icon: Zap,
+    },
+    {
+      id: 'detective' as const,
+      num: '05',
+      titleEn: 'Word Detective',
+      subtitleEn: 'Guess from 3 Hints',
+      descEn:
+        'Use 1 to 3 easy hints to find the right word. Sinhala meaning shows after you answer.',
+      badgeInfo: '8 Words',
+      bestScore: bestScores.detective,
+      icon: Search,
     },
   ];
 
@@ -144,9 +195,9 @@ export const GamesPage: React.FC<GamesPageProps> = ({ stories, onBackToToc }) =>
       <div className="text-center mb-9">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-center gap-2 text-xs font-medium tracking-wide text-[#8CA8FF] mb-2.5">
-            <span>English Practice Games</span>
+            <span>English Word Games</span>
             <span aria-hidden="true">·</span>
-            <span>Interactive Vocabulary & Context</span>
+            <span>Fun Practice</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-serif font-bold tracking-tight [text-wrap:balance]">
@@ -155,7 +206,7 @@ export const GamesPage: React.FC<GamesPageProps> = ({ stories, onBackToToc }) =>
           </h1>
 
           <p className="mt-3.5 text-[#CBD5E1] text-sm sm:text-base leading-relaxed tracking-[0.01em]">
-            Practice English words and real story sentences through interactive challenges. Sinhala meanings appear after you answer.
+            Play simple games to learn English words from the stories. Sinhala meanings appear after you answer.
           </p>
         </div>
 
@@ -222,21 +273,42 @@ export const GamesPage: React.FC<GamesPageProps> = ({ stories, onBackToToc }) =>
       {/* Main Games Hub vs Active Game Canvas */}
       {activeGame === null ? (
         <section aria-label="Game Selection">
-          <div className="flex items-center justify-between border-b border-[rgba(165,180,252,0.14)] pb-3 mb-5">
+          <div className="flex items-center justify-between border-b border-[rgba(165,180,252,0.14)] pb-3 mb-5 gap-3">
             <h2 className="text-sm font-semibold text-[#E2E8F0] tracking-[0.01em]">
-              01 – 03 · Choose a Practice Game
+              01 – 05 · Pick a Game
             </h2>
-            <button
-              type="button"
-              onClick={onBackToToc}
-              className="inline-flex items-center gap-1.5 text-xs text-[#8CA8FF] hover:text-[#B4C8FF] cursor-pointer whitespace-nowrap"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Contents</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleShareGames}
+                className={`inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer whitespace-nowrap transition-colors ${
+                  copiedLink ? 'text-[#6EE7B7]' : 'text-[#CBD5E1] hover:text-[#FFFFFF]'
+                }`}
+              >
+                {copiedLink ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-[#6EE7B7]" />
+                    <span>Link copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-3.5 h-3.5 text-[#8CA8FF]" />
+                    <span>Share Games</span>
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={onBackToToc}
+                className="inline-flex items-center gap-1.5 text-xs text-[#8CA8FF] hover:text-[#B4C8FF] cursor-pointer whitespace-nowrap"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Contents</span>
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {gameMeta.map((g) => {
               const IconComp = g.icon;
               return (
@@ -245,7 +317,7 @@ export const GamesPage: React.FC<GamesPageProps> = ({ stories, onBackToToc }) =>
                   type="button"
                   onClick={() => {
                     soundEffects.playPageFlip();
-                    setActiveGame(g.id);
+                    selectGame(g.id);
                   }}
                   className="group text-left bg-[rgba(15,23,46,0.92)] hover:bg-[#141F3D] rounded-2xl border border-[rgba(165,180,252,0.16)] hover:border-[rgba(108,123,255,0.65)] p-5 shadow-[0_16px_40px_-15px_rgba(0,0,0,0.65)] hover:shadow-[0_0_32px_-8px_rgba(99,102,241,0.3)] transition-all duration-200 cursor-pointer flex flex-col justify-between"
                 >
@@ -294,17 +366,41 @@ export const GamesPage: React.FC<GamesPageProps> = ({ stories, onBackToToc }) =>
         <section className="space-y-5" aria-label="Active Game Arena">
           {/* Game Sub-Navigation Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                soundEffects.playClick();
-                setActiveGame(null);
-              }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] text-[#E2E8F0] border border-[rgba(165,180,252,0.22)] text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0"
-            >
-              <ArrowLeft className="w-3.5 h-3.5 text-[#8CA8FF]" />
-              <span>All Games</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  soundEffects.playClick();
+                  selectGame(null);
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] text-[#E2E8F0] border border-[rgba(165,180,252,0.22)] text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-[#8CA8FF]" />
+                <span>All Games</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleShareGames}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                  copiedLink
+                    ? 'bg-[rgba(16,185,129,0.16)] border-[rgba(52,211,153,0.45)] text-[#6EE7B7]'
+                    : 'bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] text-[#CBD5E1] hover:text-[#FFFFFF] border-[rgba(165,180,252,0.22)]'
+                }`}
+              >
+                {copiedLink ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-[#6EE7B7]" />
+                    <span>Link copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-3.5 h-3.5 text-[#8CA8FF]" />
+                    <span>Share</span>
+                  </>
+                )}
+              </button>
+            </div>
 
             <div className="flex flex-wrap items-center gap-1 p-1 bg-[rgba(13,20,41,0.92)] border border-[rgba(165,180,252,0.16)] rounded-xl">
               {gameMeta.map((g) => (
@@ -313,7 +409,7 @@ export const GamesPage: React.FC<GamesPageProps> = ({ stories, onBackToToc }) =>
                   type="button"
                   onClick={() => {
                     soundEffects.playClick();
-                    setActiveGame(g.id);
+                    selectGame(g.id);
                   }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 ${
                     activeGame === g.id
@@ -351,6 +447,22 @@ export const GamesPage: React.FC<GamesPageProps> = ({ stories, onBackToToc }) =>
               allVocabPool={allVocabPool}
               storyLabel={storyLabel}
               onSaveBestScore={(s) => updateBestScore('cloze', s)}
+            />
+          )}
+
+          {activeGame === 'speed' && (
+            <SpeedSpellGame
+              vocabPool={activeVocabPool}
+              storyLabel={storyLabel}
+              onSaveBestScore={(s) => updateBestScore('speed', s)}
+            />
+          )}
+
+          {activeGame === 'detective' && (
+            <MeaningDetectiveGame
+              vocabPool={activeVocabPool}
+              storyLabel={storyLabel}
+              onSaveBestScore={(s) => updateBestScore('detective', s)}
             />
           )}
         </section>

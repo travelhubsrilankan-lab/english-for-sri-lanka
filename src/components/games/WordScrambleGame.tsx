@@ -295,17 +295,17 @@ export const WordScrambleGame: React.FC<WordScrambleGameProps> = ({
               <span className="tabular-nums">{Math.min(ROUNDS_PER_MATCH, eligibleWords.length)} Rounds</span>
             </div>
             <h2 className="text-2xl font-serif font-bold text-[#FFFFFF]">
-              Word Scramble · Letter Builder
+              Word Scramble · Put Letters in Order
             </h2>
             <p className="text-sm text-[#CBD5E1] mt-1.5 leading-relaxed">
-              Read the English definition or listen to the audio clue, then arrange the scrambled letters to build the word. The Sinhala meaning is shown after you answer.
+              Read the meaning or listen to the word, then tap the letters in order. You will see the Sinhala meaning after you answer.
             </p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-4 pt-5 border-t border-[rgba(165,180,252,0.14)]">
           <div className="text-xs text-[#94A3B8]">
-            Click letters or type A–Z directly on your keyboard.
+            Tap letters on screen or type A–Z on your keyboard.
           </div>
           <button
             type="button"
@@ -330,12 +330,12 @@ export const WordScrambleGame: React.FC<WordScrambleGameProps> = ({
             <Award className="w-7 h-7" />
           </div>
           <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#FFFFFF]">
-            Spelling Round Complete!
+            Great Job!
           </h2>
           <p className="mt-2 text-sm text-[#CBD5E1] tabular-nums">
             Score: <span className="font-bold text-[#8CA8FF]">{score}</span>
             <span className="mx-2 text-[#64748B]" aria-hidden="true">·</span>
-            Solved:{' '}
+            Right:{' '}
             <span className="font-bold text-[#6EE7B7]">
               {solvedCount} / {roundWords.length}
             </span>
@@ -441,7 +441,7 @@ export const WordScrambleGame: React.FC<WordScrambleGameProps> = ({
           className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#182242] hover:bg-[#1F2D57] text-[#9CB8FF] border border-[rgba(165,180,252,0.2)] text-xs font-semibold transition-colors cursor-pointer"
         >
           <Volume2 className="w-4 h-4" />
-          <span>Hear Word (Audio Hint)</span>
+          <span>Hear Word</span>
         </button>
       </div>
 
@@ -485,7 +485,7 @@ export const WordScrambleGame: React.FC<WordScrambleGameProps> = ({
       {roundStatus === 'wrong' && (
         <div className="mb-5 p-3 rounded-xl bg-[rgba(76,5,25,0.65)] border border-[rgba(251,113,133,0.45)] text-[#FFE4E6] text-xs flex items-center justify-center gap-2">
           <AlertCircle className="w-4 h-4 text-[#FB7185] shrink-0" />
-          <span>Not quite right — try rearranging the letters.</span>
+          <span>Try again — move the letters to spell the word.</span>
         </div>
       )}
 
@@ -571,7 +571,7 @@ export const WordScrambleGame: React.FC<WordScrambleGameProps> = ({
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#17244A] hover:bg-[#1E2F60] text-[#9CB8FF] border border-[rgba(108,123,255,0.45)] text-xs font-semibold cursor-pointer whitespace-nowrap"
             >
               <Lightbulb className="w-3.5 h-3.5" />
-              <span>Reveal Letter</span>
+              <span>Show 1 Letter</span>
             </button>
 
             <button

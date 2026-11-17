@@ -205,7 +205,7 @@ export const WordMatchGame: React.FC<WordMatchGameProps> = ({
               Word Match Memory
             </h2>
             <p className="text-sm text-[#CBD5E1] mt-1.5 leading-relaxed">
-              Flip the cards to pair each English word with its matching English definition. The Sinhala meaning is revealed once a pair is matched.
+              Tap cards to match each English word with its meaning. You will see the Sinhala meaning after you match a pair.
             </p>
           </div>
         </div>
@@ -213,7 +213,7 @@ export const WordMatchGame: React.FC<WordMatchGameProps> = ({
         {/* Difficulty Options */}
         <div className="mb-7">
           <p className="text-xs font-semibold text-[#94A3B8] mb-3">
-            Select Board Size
+            Choose How Many Cards
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {([6, 8, 10] as const).map((count) => {
@@ -224,7 +224,7 @@ export const WordMatchGame: React.FC<WordMatchGameProps> = ({
                   ? 'Easy'
                   : count === 8
                   ? 'Medium'
-                  : 'Master';
+                  : 'Hard';
 
               return (
                 <button
@@ -253,7 +253,7 @@ export const WordMatchGame: React.FC<WordMatchGameProps> = ({
 
         <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[rgba(165,180,252,0.14)]">
           <div className="text-xs text-[#94A3B8]">
-            Word pronunciation plays automatically when flipping English word cards.
+            You will hear the word when you tap a word card.
           </div>
 
           <button
@@ -277,21 +277,21 @@ export const WordMatchGame: React.FC<WordMatchGameProps> = ({
             <Award className="w-7 h-7" />
           </div>
           <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#FFFFFF]">
-            Board Cleared!
+            Great Job!
           </h2>
           <p className="mt-2 text-sm text-[#CBD5E1] tabular-nums">
             Score: <span className="font-bold text-[#8CA8FF]">{score}</span>
             <span className="mx-2 text-[#64748B]" aria-hidden="true">·</span>
             Moves: <span className="font-bold text-[#FFFFFF]">{moves}</span>
             <span className="mx-2 text-[#64748B]" aria-hidden="true">·</span>
-            Accuracy: <span className="font-bold text-[#6EE7B7]">{accuracy}%</span>
+            Right: <span className="font-bold text-[#6EE7B7]">{accuracy}%</span>
           </p>
         </div>
 
         {/* Learned Pairs Review with Sinhala Meanings Unlocked After Clear */}
         <div className="mb-8">
           <h3 className="text-xs font-semibold text-[#94A3B8] mb-3">
-            Matched Words & Sinhala Meanings ({selectedPairVocabs.length}) · Click to listen
+            Words You Matched ({selectedPairVocabs.length}) · Tap to hear
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {selectedPairVocabs.map((v) => (
@@ -320,7 +320,7 @@ export const WordMatchGame: React.FC<WordMatchGameProps> = ({
             onClick={() => setGameState('TITLE_MENU')}
             className="px-5 py-2.5 rounded-full bg-[#182242] hover:bg-[#1E2B52] text-[#E2E8F0] border border-[rgba(165,180,252,0.22)] text-xs font-semibold cursor-pointer whitespace-nowrap"
           >
-            Change Board Size
+            Change Cards
           </button>
           <button
             type="button"

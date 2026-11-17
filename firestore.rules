@@ -1,0 +1,196 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global hardened helper primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidDateId(dateId) {
+      return dateId is string && dateId.size() == 10 && dateId.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'completedStoryIds', 'streakCount', 'lastReadDate', 'updatedAt'])
+        && data.keys().hasOnly([
+          'uid',
+          'displayName',
+          'completedStoryIds',
+          'quizScores',
+          'gameBestScores',
+          'streakCount',
+          'lastReadDate',
+          'readerTheme',
+          'readerFontSize',
+          'updatedAt'
+        ])
+        && data.uid is string
+        && data.uid == userId
+        && data.uid == request.auth.uid
+        && data.uid.size() >= 1 && data.uid.size() <= 128
+        && data.uid.matches('^[a-zA-Z0-9_\\-]+$')
+        && (!data.keys().hasAny(['displayName']) || (data.displayName is string && data.displayName.size() <= 100))
+        && data.completedStoryIds is list
+        && data.completedStoryIds.size() <= 100
+        && (data.completedStoryIds.size() == 0 || (data.completedStoryIds[0] is string && data.completedStoryIds[0].size() <= 100))
+        && (!data.keys().hasAny(['quizScores']) || (data.quizScores is map && data.quizScores.keys().size() <= 50))
+        && (!data.keys().hasAny(['gameBestScores']) || (data.gameBestScores is map && data.gameBestScores.keys().size() <= 20))
+        && data.streakCount is int
+        && data.streakCount >= 0 && data.streakCount <= 10000
+        && data.lastReadDate is string
+        && data.lastReadDate.size() <= 20
+        && (!data.keys().hasAny(['readerTheme']) || (data.readerTheme is string && data.readerTheme in ['night', 'light', 'sepia'] && data.readerTheme.size() <= 16))
+        && (!data.keys().hasAny(['readerFontSize']) || (data.readerFontSize is int && data.readerFontSize >= 0 && data.readerFontSize <= 3))
+        && data.updatedAt == request.time;
+    }
+
+    function isValidSavedWord(data, userId) {
+      return data.keys().hasAll(['userId', 'word', 'sinhalaMeaning', 'mastered', 'savedAt'])
+        && data.keys().hasOnly([
+          'userId',
+          'word',
+          'phonetic',
+          'sinhalaMeaning',
+          'englishDefinition',
+          'partOfSpeech',
+          'storyId',
+          'mastered',
+          'savedAt'
+        ])
+        && data.userId is string
+        && data.userId == userId
+        && data.userId == request.auth.uid
+        && data.userId.size() >= 1 && data.userId.size() <= 128
+        && data.word is string && data.word.size() >= 1 && data.word.size() <= 64
+        && (!data.keys().hasAny(['phonetic']) || (data.phonetic is string && data.phonetic.size() <= 80))
+        && data.sinhalaMeaning is string && data.sinhalaMeaning.size() >= 1 && data.sinhalaMeaning.size() <= 200
+        && (!data.keys().hasAny(['englishDefinition']) || (data.englishDefinition is string && data.englishDefinition.size() <= 300))
+        && (!data.keys().hasAny(['partOfSpeech']) || (data.partOfSpeech is string && data.partOfSpeech.size() <= 30))
+        && (!data.keys().hasAny(['storyId']) || (data.storyId is string && data.storyId.size() <= 80))
+        && data.mastered is bool
+        && data.savedAt == request.time;
+    }
+
+    function isValidDailyAnalytics(data, dateId) {
+      return data.keys().hasAll(['date', 'visits', 'updatedAt'])
+        && data.keys().hasOnly(['date', 'visits', 'updatedAt'])
+        && data.date is string
+        && data.date == dateId
+        && data.date.size() == 10
+        && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && data.visits is int
+        && data.visits >= 1 && data.visits <= 100000000
+        && data.updatedAt == request.time;
+    }
+
+    function isValidStoryAnalytics(data, storyId) {
+      return data.keys().hasAll(['storyId', 'views', 'updatedAt'])
+        && data.keys().hasOnly(['storyId', 'views', 'updatedAt'])
+        && data.storyId is string
+        && data.storyId == storyId
+        && data.storyId.size() >= 1 && data.storyId.size() <= 100
+        && data.storyId.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.views is int
+        && data.views >= 1 && data.views <= 100000000
+        && data.updatedAt == request.time;
+    }
+
+    // 1. User Learning Profile (Strictly Private to Verified Owner)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId);
+      allow update: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'displayName',
+          'completedStoryIds',
+          'quizScores',
+          'gameBestScores',
+          'streakCount',
+          'lastReadDate',
+          'readerTheme',
+          'readerFontSize',
+          'updatedAt'
+        ]);
+      allow delete: if isValidId(userId) && isOwner(userId);
+
+      // 2. Saved Vocabulary Words Subcollection (Master Gate checks parent profile exists)
+      match /savedWords/{wordId} {
+        allow get: if isValidId(userId) && isValidId(wordId) && isOwner(userId)
+          && exists(/databases/$(database)/documents/users/$(userId));
+        allow list: if isOwner(userId) && resource.data.userId == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(wordId) && isOwner(userId)
+          && exists(/databases/$(database)/documents/users/$(userId))
+          && isValidSavedWord(incoming(), userId);
+        allow update: if isValidId(userId) && isValidId(wordId) && isOwner(userId)
+          && exists(/databases/$(database)/documents/users/$(userId))
+          && isValidSavedWord(incoming(), userId)
+          && incoming().userId == existing().userId
+          && incoming().word == existing().word
+          && incoming().diff(existing()).affectedKeys().hasOnly(['mastered', 'sinhalaMeaning', 'phonetic', 'englishDefinition', 'partOfSpeech', 'storyId', 'savedAt']);
+        allow delete: if isValidId(userId) && isValidId(wordId) && isOwner(userId);
+      }
+    }
+
+    // 3. Public Aggregate Daily Visitor Counts (Zero PII, Strict +1 Increment Only)
+    match /analytics_daily/{dateId} {
+      allow get: if isValidDateId(dateId);
+      allow list: if resource.data.date is string && resource.data.visits is int;
+      allow create: if isValidDateId(dateId)
+        && isValidDailyAnalytics(incoming(), dateId)
+        && incoming().visits == 1;
+      allow update: if isValidDateId(dateId)
+        && isValidDailyAnalytics(incoming(), dateId)
+        && incoming().date == existing().date
+        && incoming().visits == existing().visits + 1
+        && incoming().diff(existing()).affectedKeys().hasOnly(['visits', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    // 4. Public Aggregate Story Read Counts (Zero PII, Strict +1 Increment Only)
+    match /analytics_stories/{storyId} {
+      allow get: if isValidId(storyId);
+      allow list: if resource.data.storyId is string && resource.data.views is int;
+      allow create: if isValidId(storyId)
+        && isValidStoryAnalytics(incoming(), storyId)
+        && incoming().views == 1;
+      allow update: if isValidId(storyId)
+        && isValidStoryAnalytics(incoming(), storyId)
+        && incoming().storyId == existing().storyId
+        && incoming().views == existing().views + 1
+        && incoming().diff(existing()).affectedKeys().hasOnly(['views', 'updatedAt']);
+      allow delete: if false;
+    }
+  }
+}

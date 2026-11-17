@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Story, VocabularyWord } from '../types/story';
-import { X, Volume2, Search, BookMarked } from 'lucide-react';
+import { X, Volume2, Search, BookMarked, Star } from 'lucide-react';
 import { speechNarrator, soundEffects } from '../utils/audio';
+import { useUserProgress } from '../context/UserProgressContext';
 
 interface VocabularyModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({
   const [activeTab, setActiveTab] = useState<'list' | 'flashcard'>('list');
   const [flashcardIndex, setFlashcardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const { isWordSaved, toggleSaveWord } = useUserProgress();
 
   React.useEffect(() => {
     setSelectedStoryFilter(currentStoryId);
@@ -168,14 +170,35 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({
                           <h4 className="text-sm font-bold text-[#FFFFFF]">{vocab.word}</h4>
                           <span className="text-xs text-[#94A3B8] font-mono">{vocab.phonetic}</span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleSpeak(vocab.word)}
-                          className="p-1.5 rounded-lg text-[#9CB8FF] hover:bg-[#1E2C54] transition-colors cursor-pointer"
-                          title="Listen to pronunciation"
-                        >
-                          <Volume2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              soundEffects.playClick();
+                              toggleSaveWord(vocab, activeStory?.id || '');
+                            }}
+                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                              isWordSaved(vocab.word)
+                                ? 'bg-[rgba(251,191,36,0.16)] text-[#FBBF24]'
+                                : 'text-[#94A3B8] hover:text-[#FBBF24] hover:bg-[#1E2C54]'
+                            }`}
+                            title={isWordSaved(vocab.word) ? 'Saved in Wordbook' : 'Save to Wordbook'}
+                          >
+                            <Star
+                              className={`w-4 h-4 ${
+                                isWordSaved(vocab.word) ? 'fill-[#FBBF24]' : ''
+                              }`}
+                            />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSpeak(vocab.word)}
+                            className="p-1.5 rounded-lg text-[#9CB8FF] hover:bg-[#1E2C54] transition-colors cursor-pointer"
+                            title="Listen to pronunciation"
+                          >
+                            <Volume2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
 
                       <p className="text-xs font-semibold text-[#9CB8FF] font-sinhala mb-1">
@@ -219,17 +242,39 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({
                       <p className="text-xs font-mono text-[#94A3B8] mb-4">
                         {currentFlashcard.phonetic}
                       </p>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleSpeak(currentFlashcard.word);
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#1D2B57] text-[#9CB8FF] text-xs font-semibold hover:bg-[#25366C] transition-colors cursor-pointer"
-                      >
-                        <Volume2 className="w-3.5 h-3.5" />
-                        <span>Pronounce</span>
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSpeak(currentFlashcard.word);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#1D2B57] text-[#9CB8FF] text-xs font-semibold hover:bg-[#25366C] transition-colors cursor-pointer"
+                        >
+                          <Volume2 className="w-3.5 h-3.5" />
+                          <span>Pronounce</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            soundEffects.playClick();
+                            toggleSaveWord(currentFlashcard, activeStory?.id || '');
+                          }}
+                          className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                            isWordSaved(currentFlashcard.word)
+                              ? 'bg-[rgba(251,191,36,0.2)] text-[#FCD34D] border border-[rgba(251,191,36,0.45)]'
+                              : 'bg-[#1D2B57] text-[#CBD5E1] hover:text-[#FFFFFF]'
+                          }`}
+                        >
+                          <Star
+                            className={`w-3.5 h-3.5 ${
+                              isWordSaved(currentFlashcard.word) ? 'fill-[#FBBF24] text-[#FBBF24]' : ''
+                            }`}
+                          />
+                          <span>{isWordSaved(currentFlashcard.word) ? 'Saved' : 'Save Word'}</span>
+                        </button>
+                      </div>
                     </>
                   ) : (
                     <>

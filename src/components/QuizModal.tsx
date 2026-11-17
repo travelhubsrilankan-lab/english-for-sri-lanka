@@ -3,6 +3,7 @@ import { Story } from '../types/story';
 import { X, CheckCircle2, AlertCircle, Award, RotateCcw, Volume2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { soundEffects, speechNarrator } from '../utils/audio';
+import { useUserProgress } from '../context/UserProgressContext';
 
 interface QuizModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
   const [isAnswerSubmitted, setIsAnswerSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const [isQuizFinished, setIsQuizFinished] = useState(false);
+  const { recordQuizScore, quizScores } = useUserProgress();
 
   useEffect(() => {
     if (isOpen) {
@@ -55,6 +57,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
       soundEffects.playClick();
     } else {
       setIsQuizFinished(true);
+      recordQuizScore(story.id, score, story.quiz.length);
       confetti({
         particleCount: 70,
         spread: 60,
@@ -250,9 +253,12 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
               <h3 className="text-xl font-serif font-bold text-[#FFFFFF] mb-1">
                 Quiz Completed! · විශිෂ්ටයි!
               </h3>
-              <p className="text-sm text-[#CBD5E1] mb-6 tabular-nums">
+              <p className="text-sm text-[#CBD5E1] mb-2 tabular-nums">
                 You scored <span className="font-bold text-[#8CA8FF]">{score}</span> out of{' '}
                 <span className="font-bold text-[#FFFFFF]">{story.quiz.length}</span>
+              </p>
+              <p className="text-xs text-[#6EE7B7] font-medium mb-6 tabular-nums">
+                Saved Best Score: {quizScores[story.id] ?? Math.round((score / Math.max(1, story.quiz.length)) * 100)}% ✔ Story Completed
               </p>
               <div className="flex items-center justify-center gap-3">
                 <button
