@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Story, VocabularyWord } from '../../types/story';
+import { extractStorySentences } from '../../utils/storyHelpers';
 import { soundEffects, speechNarrator } from '../../utils/audio';
 import confetti from 'canvas-confetti';
 import {
@@ -24,7 +25,7 @@ type GameState = 'TITLE_MENU' | 'PLAYING' | 'ROUND_SUMMARY';
 
 interface ClozeQuestion {
   id: string;
-  storyTitleEn: string;
+  storyTitle: string;
   beforeBlank: string;
   afterBlank: string;
   fullSentenceEn: string;
@@ -51,63 +52,62 @@ function buildClozeQuestions(stories: Story[], allVocabPool: VocabularyWord[]): 
   const questions: ClozeQuestion[] = [];
 
   stories.forEach((story) => {
-    story.chapters.forEach((chap) => {
-      chap.sentences.forEach((sentence) => {
-        const vocabTokens = sentence.words
-          .map((w, idx) => ({ w, idx }))
-          .filter((item) => !!item.w.vocab);
+    const sentences = extractStorySentences(story);
+    sentences.forEach((sentence) => {
+      const vocabTokens = sentence.words
+        .map((w, idx) => ({ w, idx }))
+        .filter((item) => !!item.w.vocab);
 
-        if (vocabTokens.length === 0) return;
+      if (vocabTokens.length === 0) return;
 
-        const picked = vocabTokens[Math.floor(vocabTokens.length / 2)];
-        const targetVocab = picked.w.vocab!;
+      const picked = vocabTokens[Math.floor(vocabTokens.length / 2)];
+      const targetVocab = picked.w.vocab!;
 
-        const beforeWords = sentence.words.slice(0, picked.idx).map((w) => w.displayWord);
-        const afterWords = sentence.words.slice(picked.idx + 1).map((w) => w.displayWord);
+      const beforeWords = sentence.words.slice(0, picked.idx).map((w) => w.displayWord);
+      const afterWords = sentence.words.slice(picked.idx + 1).map((w) => w.displayWord);
 
-        const matchParts = picked.w.displayWord.match(
-          /^([^A-Za-z]*)([A-Za-z'’-]+)([^A-Za-z]*)$/
-        );
-        const leadingPunct = matchParts ? matchParts[1] : '';
-        const coreWord = matchParts ? matchParts[2] : targetVocab.word;
-        const trailingPunct = matchParts ? matchParts[3] : '';
+      const matchParts = picked.w.displayWord.match(
+        /^([^A-Za-z]*)([A-Za-z'’-]+)([^A-Za-z]*)$/
+      );
+      const leadingPunct = matchParts ? matchParts[1] : '';
+      const coreWord = matchParts ? matchParts[2] : targetVocab.word;
+      const trailingPunct = matchParts ? matchParts[3] : '';
 
-        const beforeBlank = [beforeWords.join(' '), leadingPunct].filter(Boolean).join(beforeWords.length ? ' ' : '');
-        const afterBlank = [trailingPunct, afterWords.join(' ')].filter(Boolean).join(afterWords.length ? ' ' : '');
+      const beforeBlank = [beforeWords.join(' '), leadingPunct].filter(Boolean).join(beforeWords.length ? ' ' : '');
+      const afterBlank = [trailingPunct, afterWords.join(' ')].filter(Boolean).join(afterWords.length ? ' ' : '');
 
-        const samePos = allVocabPool.filter(
-          (v) =>
-            v.word.toLowerCase() !== targetVocab.word.toLowerCase() &&
-            v.partOfSpeech === targetVocab.partOfSpeech
-        );
-        const otherPos = allVocabPool.filter(
-          (v) =>
-            v.word.toLowerCase() !== targetVocab.word.toLowerCase() &&
-            v.partOfSpeech !== targetVocab.partOfSpeech
-        );
+      const samePos = allVocabPool.filter(
+        (v) =>
+          v.word.toLowerCase() !== targetVocab.word.toLowerCase() &&
+          v.partOfSpeech === targetVocab.partOfSpeech
+      );
+      const otherPos = allVocabPool.filter(
+        (v) =>
+          v.word.toLowerCase() !== targetVocab.word.toLowerCase() &&
+          v.partOfSpeech !== targetVocab.partOfSpeech
+      );
 
-        const distractors = [...shuffleArray(samePos), ...shuffleArray(otherPos)]
-          .slice(0, 3)
-          .map((v) => v.word.toLowerCase());
+      const distractors = [...shuffleArray(samePos), ...shuffleArray(otherPos)]
+        .slice(0, 3)
+        .map((v) => v.word.toLowerCase());
 
-        if (distractors.length < 3) return;
+      if (distractors.length < 3) return;
 
-        const targetOptionText = coreWord.toLowerCase();
-        const combined = shuffleArray([targetOptionText, ...distractors]);
-        const correctOptionIndex = combined.indexOf(targetOptionText);
+      const targetOptionText = coreWord.toLowerCase();
+      const combined = shuffleArray([targetOptionText, ...distractors]);
+      const correctOptionIndex = combined.indexOf(targetOptionText);
 
-        questions.push({
-          id: `${sentence.id}-${picked.idx}`,
-          storyTitleEn: story.titleEn,
-          beforeBlank,
-          afterBlank,
-          fullSentenceEn: sentence.englishText,
-          sinhalaTranslation: sentence.sinhalaTranslation,
-          targetDisplay: coreWord,
-          targetVocab,
-          options: combined,
-          correctOptionIndex,
-        });
+      questions.push({
+        id: `${sentence.id}-${picked.idx}`,
+        storyTitle: story.title,
+        beforeBlank,
+        afterBlank,
+        fullSentenceEn: sentence.englishText,
+        sinhalaTranslation: sentence.sinhalaTranslation || '',
+        targetDisplay: coreWord,
+        targetVocab,
+        options: combined,
+        correctOptionIndex,
       });
     });
   });
@@ -220,13 +220,19 @@ export const StoryFillBlankGame: React.FC<StoryFillBlankGameProps> = ({
 
         <div className="flex flex-wrap items-center justify-between gap-4 pt-5 border-t border-[rgba(165,180,252,0.14)]">
           <div className="text-xs text-[#94A3B8]">
-            You can listen to the full sentence after you answer.
+            {pool.length === 0 ? (
+              <span lang="si" className="font-sinhala text-[#CBD5E1]">
+                කතා එක් කළ පසු මෙම ක්‍රීඩාව ක්‍රියාත්මක වේ.
+              </span>
+            ) : (
+              'You can listen to the full sentence after you answer.'
+            )}
           </div>
           <button
             type="button"
             onClick={startGame}
             disabled={pool.length === 0}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-indigo-cta text-[#FFFFFF] font-bold text-sm transition-all cursor-pointer whitespace-nowrap disabled:opacity-40"
+            className="inline-flex items-center gap-2 px-6 py-3 min-h-[44px] rounded-full bg-indigo-cta text-[#FFFFFF] font-bold text-sm transition-all cursor-pointer whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Play className="w-4 h-4 fill-[#FFFFFF]" />
             <span>Start Game</span>
@@ -301,7 +307,7 @@ export const StoryFillBlankGame: React.FC<StoryFillBlankGameProps> = ({
 
       {/* Story Context */}
       <div className="mb-3 text-xs font-medium text-[#8CA8FF]">
-        From: {currentQ.storyTitleEn}
+        From: {currentQ.storyTitle}
       </div>
 
       {/* Sentence with Inline Blank (English Only Before Answering; Reveals Sinhala Translation AFTER Answering) */}
@@ -322,8 +328,11 @@ export const StoryFillBlankGame: React.FC<StoryFillBlankGameProps> = ({
           {currentQ.afterBlank ? <span> {currentQ.afterBlank}</span> : null}
         </p>
 
-        {isAnswered && (
-          <p className="mt-3 pt-3 border-t border-[rgba(165,180,252,0.12)] text-xs sm:text-sm font-sinhala text-[#CBD5E1] leading-relaxed">
+        {isAnswered && currentQ.sinhalaTranslation && (
+          <p
+            lang="si"
+            className="mt-3 pt-3 border-t border-[rgba(165,180,252,0.12)] text-xs sm:text-sm font-sinhala text-[#CBD5E1] leading-relaxed"
+          >
             {currentQ.sinhalaTranslation}
           </p>
         )}
@@ -403,8 +412,9 @@ export const StoryFillBlankGame: React.FC<StoryFillBlankGameProps> = ({
                   : `Answer: "${currentQ.targetDisplay}"`}
               </span>
             </div>
-            <p className="text-xs font-sinhala">
-              <strong>{currentQ.targetVocab.word}</strong> ({currentQ.targetVocab.phonetic}) —{' '}
+            <p lang="si" className="text-xs font-sinhala">
+              <strong>{currentQ.targetVocab.word}</strong>
+              {currentQ.targetVocab.phonetic ? ` (${currentQ.targetVocab.phonetic})` : ''} —{' '}
               {currentQ.targetVocab.sinhalaMeaning}
             </p>
           </div>

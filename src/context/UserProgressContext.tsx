@@ -26,6 +26,7 @@ export interface SavedWordEntry {
   phonetic: string;
   sinhalaMeaning: string;
   englishDefinition: string;
+  example?: string;
   partOfSpeech: string;
   storyId: string;
   mastered: boolean;
@@ -38,6 +39,7 @@ export interface QuizScoreRecord {
 
 interface LocalProgressSnapshot {
   completedStoryIds: string[];
+  favoriteStoryIds: string[];
   quizScores: Record<string, number>;
   gameBestScores: Record<string, number>;
   streakCount: number;
@@ -53,6 +55,7 @@ interface UserProgressContextValue {
   authBusy: boolean;
   authError: string | null;
   completedStoryIds: string[];
+  favoriteStoryIds: string[];
   quizScores: Record<string, number>;
   gameBestScores: Record<string, number>;
   streakCount: number;
@@ -63,6 +66,8 @@ interface UserProgressContextValue {
   signInWithGoogle: () => Promise<void>;
   signOutUser: () => Promise<void>;
   markStoryComplete: (storyId: string) => void;
+  toggleFavoriteStory: (storyId: string) => void;
+  isStoryFavorited: (storyId: string) => boolean;
   recordQuizScore: (storyId: string, score: number, total: number) => void;
   updateGameBestScore: (gameKey: string, score: number) => void;
   recordLearningActivity: () => void;
@@ -71,6 +76,7 @@ interface UserProgressContextValue {
   toggleSaveWord: (vocab: VocabularyWord, storyId?: string) => void;
   isWordSaved: (word: string) => boolean;
   toggleMasteredWord: (wordId: string) => void;
+  setWordMastered: (wordId: string, mastered: boolean) => void;
   addStarterWords: (words: Array<{ vocab: VocabularyWord; storyId: string }>) => void;
   recordDailyVisit: () => void;
   recordStoryView: (storyId: string) => void;
@@ -78,6 +84,7 @@ interface UserProgressContextValue {
 
 const LOCAL_STORAGE_KEY = 'storyglow_user_progress_v1';
 const GAME_SCORES_KEY = 'storyglow_game_best_scores';
+const FAVORITE_STORIES_KEY = 'storyglow_favorite_stories_v1';
 
 function getTodayDateString(): string {
   const now = new Date();
@@ -109,6 +116,7 @@ export function normalizeWordId(word: string): string {
 function readLocalSnapshot(): LocalProgressSnapshot {
   const defaults: LocalProgressSnapshot = {
     completedStoryIds: [],
+    favoriteStoryIds: [],
     quizScores: {},
     gameBestScores: { match: 0, scramble: 0, cloze: 0, speed: 0, detective: 0 },
     streakCount: 0,
@@ -122,15 +130,39 @@ function readLocalSnapshot(): LocalProgressSnapshot {
     const rawGames = window.localStorage.getItem(GAME_SCORES_KEY);
     if (rawGames) {
       const parsedGames = JSON.parse(rawGames) as Record<string, number>;
-      defaults.gameBestScores = { ...defaults.gameBestScores, ...parsedGames };
+      if (parsedGames && typeof parsedGames === 'object') {
+        defaults.gameBestScores = { ...defaults.gameBestScores, ...parsedGames };
+      }
     }
+  } catch {
+    // Ignore localStorage game score read errors
+  }
+
+  try {
+    const rawFavorites = window.localStorage.getItem(FAVORITE_STORIES_KEY);
+    if (rawFavorites) {
+      const parsedFav = JSON.parse(rawFavorites) as unknown;
+      if (Array.isArray(parsedFav)) {
+        defaults.favoriteStoryIds = parsedFav.filter((id): id is string => typeof id === 'string');
+      }
+    }
+  } catch {
+    // Ignore localStorage favorites read errors
+  }
+
+  try {
     const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<LocalProgressSnapshot>;
+      const mergedFavorites = Array.isArray(parsed.favoriteStoryIds)
+        ? parsed.favoriteStoryIds.filter((id): id is string => typeof id === 'string')
+        : defaults.favoriteStoryIds;
+
       return {
         completedStoryIds: Array.isArray(parsed.completedStoryIds)
-          ? parsed.completedStoryIds.slice(0, 100)
+          ? parsed.completedStoryIds.filter((id): id is string => typeof id === 'string').slice(0, 100)
           : [],
+        favoriteStoryIds: Array.from(new Set(mergedFavorites)).slice(0, 100),
         quizScores:
           parsed.quizScores && typeof parsed.quizScores === 'object' ? parsed.quizScores : {},
         gameBestScores:
@@ -156,8 +188,9 @@ function readLocalSnapshot(): LocalProgressSnapshot {
       };
     }
   } catch {
-    // Ignore localStorage restrictions
+    // Ignore localStorage progress read errors
   }
+
   return defaults;
 }
 
@@ -173,6 +206,9 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const [completedStoryIds, setCompletedStoryIds] = useState<string[]>(
     initialRef.current.completedStoryIds
+  );
+  const [favoriteStoryIds, setFavoriteStoryIds] = useState<string[]>(
+    initialRef.current.favoriteStoryIds
   );
   const [quizScores, setQuizScores] = useState<Record<string, number>>(
     initialRef.current.quizScores
@@ -192,11 +228,12 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
     initialRef.current.savedWords
   );
 
-  // Persist snapshot to localStorage whenever core state updates
+  // Persist snapshot to localStorage inside try/catch whenever core state updates
   useEffect(() => {
     try {
       const payload: LocalProgressSnapshot = {
         completedStoryIds,
+        favoriteStoryIds,
         quizScores,
         gameBestScores,
         streakCount,
@@ -207,11 +244,13 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
       };
       window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
       window.localStorage.setItem(GAME_SCORES_KEY, JSON.stringify(gameBestScores));
+      window.localStorage.setItem(FAVORITE_STORIES_KEY, JSON.stringify(favoriteStoryIds));
     } catch {
-      // Ignore storage access errors
+      // Ignore localStorage write errors (e.g. private browsing quota)
     }
   }, [
     completedStoryIds,
+    favoriteStoryIds,
     quizScores,
     gameBestScores,
     streakCount,
@@ -221,7 +260,6 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
     savedWords,
   ]);
 
-  // Keep latest state ref for async Firestore sync without stale closures
   const stateRef = useRef({
     completedStoryIds,
     quizScores,
@@ -383,7 +421,6 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
           await pushProfileToCloud(currentUser, local);
         }
 
-        // Sync any local-only savedWords into cloud after profile exists (Master Gate)
         const localWords = readLocalSnapshot().savedWords;
         for (const w of localWords) {
           const wordRef = doc(db, 'users', currentUser.uid, 'savedWords', w.wordId);
@@ -394,8 +431,8 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
               word: w.word.slice(0, 64),
               phonetic: (w.phonetic || '').slice(0, 80),
               sinhalaMeaning: w.sinhalaMeaning.slice(0, 200),
-              englishDefinition: (w.englishDefinition || '').slice(0, 300),
-              partOfSpeech: (w.partOfSpeech || 'noun').slice(0, 30),
+              englishDefinition: (w.example || w.englishDefinition || '').slice(0, 300),
+              partOfSpeech: (w.partOfSpeech || 'word').slice(0, 30),
               storyId: (w.storyId || '').slice(0, 80),
               mastered: Boolean(w.mastered),
               savedAt: serverTimestamp(),
@@ -403,20 +440,21 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
           }
         }
 
-        // Subscribe to savedWords subcollection
         const savedWordsPath = `users/${currentUser.uid}/savedWords`;
         unsubSavedWords = onSnapshot(
           collection(db, 'users', currentUser.uid, 'savedWords'),
           (snapshot) => {
             const list: SavedWordEntry[] = snapshot.docs.map((d) => {
               const data = d.data();
+              const defText = String(data.englishDefinition || '');
               return {
                 wordId: d.id,
                 word: String(data.word || d.id),
                 phonetic: String(data.phonetic || ''),
                 sinhalaMeaning: String(data.sinhalaMeaning || ''),
-                englishDefinition: String(data.englishDefinition || ''),
-                partOfSpeech: String(data.partOfSpeech || 'noun'),
+                englishDefinition: defText,
+                example: defText,
+                partOfSpeech: String(data.partOfSpeech || 'word'),
                 storyId: String(data.storyId || ''),
                 mastered: Boolean(data.mastered),
               };
@@ -500,6 +538,17 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
       });
     },
     [computeNextStreak, syncAfterUpdate]
+  );
+
+  const toggleFavoriteStory = useCallback((storyId: string) => {
+    setFavoriteStoryIds((prev) =>
+      prev.includes(storyId) ? prev.filter((id) => id !== storyId) : [storyId, ...prev]
+    );
+  }, []);
+
+  const isStoryFavorited = useCallback(
+    (storyId: string) => favoriteStoryIds.includes(storyId),
+    [favoriteStoryIds]
   );
 
   const recordQuizScore = useCallback(
@@ -589,13 +638,15 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
           });
         }
       } else {
+        const cleanExample = (vocab.example || vocab.englishDefinition || '').slice(0, 300);
         const entry: SavedWordEntry = {
           wordId,
           word: vocab.word.slice(0, 64),
           phonetic: (vocab.phonetic || '').slice(0, 80),
           sinhalaMeaning: vocab.sinhalaMeaning.slice(0, 200),
-          englishDefinition: (vocab.englishDefinition || '').slice(0, 300),
-          partOfSpeech: (vocab.partOfSpeech || 'noun').slice(0, 30),
+          englishDefinition: cleanExample,
+          example: cleanExample,
+          partOfSpeech: (vocab.partOfSpeech || 'word').slice(0, 30),
           storyId: storyId.slice(0, 80),
           mastered: false,
         };
@@ -605,7 +656,6 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
           const path = `users/${user.uid}/savedWords/${wordId}`;
           void (async () => {
             try {
-              // Ensure parent profile exists first for Master Gate rule
               await pushProfileToCloud(user, stateRef.current);
               await setDoc(doc(db, 'users', user.uid, 'savedWords', wordId), {
                 userId: user.uid,
@@ -628,17 +678,10 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
     [savedWords, user, pushProfileToCloud]
   );
 
-  const toggleMasteredWord = useCallback(
-    (wordId: string) => {
-      let nextMastered = false;
+  const setWordMastered = useCallback(
+    (wordId: string, mastered: boolean) => {
       setSavedWords((prev) =>
-        prev.map((w) => {
-          if (w.wordId === wordId) {
-            nextMastered = !w.mastered;
-            return { ...w, mastered: nextMastered };
-          }
-          return w;
-        })
+        prev.map((w) => (w.wordId === wordId ? { ...w, mastered } : w))
       );
 
       recordLearningActivity();
@@ -648,7 +691,7 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
         void setDoc(
           doc(db, 'users', user.uid, 'savedWords', wordId),
           {
-            mastered: nextMastered,
+            mastered,
             savedAt: serverTimestamp(),
           },
           { merge: true }
@@ -660,6 +703,14 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
     [user, recordLearningActivity]
   );
 
+  const toggleMasteredWord = useCallback(
+    (wordId: string) => {
+      const target = savedWords.find((w) => w.wordId === wordId);
+      setWordMastered(wordId, target ? !target.mastered : true);
+    },
+    [savedWords, setWordMastered]
+  );
+
   const addStarterWords = useCallback(
     (items: Array<{ vocab: VocabularyWord; storyId: string }>) => {
       const existingIds = new Set(savedWords.map((w) => w.wordId));
@@ -669,13 +720,19 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
         const wordId = normalizeWordId(item.vocab.word);
         if (!existingIds.has(wordId)) {
           existingIds.add(wordId);
+          const cleanExample = (
+            item.vocab.example ||
+            item.vocab.englishDefinition ||
+            ''
+          ).slice(0, 300);
           additions.push({
             wordId,
             word: item.vocab.word.slice(0, 64),
             phonetic: (item.vocab.phonetic || '').slice(0, 80),
             sinhalaMeaning: item.vocab.sinhalaMeaning.slice(0, 200),
-            englishDefinition: (item.vocab.englishDefinition || '').slice(0, 300),
-            partOfSpeech: (item.vocab.partOfSpeech || 'noun').slice(0, 30),
+            englishDefinition: cleanExample,
+            example: cleanExample,
+            partOfSpeech: (item.vocab.partOfSpeech || 'word').slice(0, 30),
             storyId: item.storyId.slice(0, 80),
             mastered: false,
           });
@@ -720,7 +777,9 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Sign-in could not complete.';
       if (!msg.includes('popup-closed-by-user')) {
-        setAuthError('Google Sign-In unavailable in this window. Please allow popups and try again.');
+        setAuthError(
+          'Google Sign-In unavailable in this window. Please allow popups and try again.'
+        );
       }
     } finally {
       setAuthBusy(false);
@@ -736,7 +795,6 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, []);
 
-  // Visitor Analytics: daily visit increment (once per day per browser session)
   const recordDailyVisit = useCallback(() => {
     const today = getTodayDateString();
     const sessionKey = `storyglow_visited_${today}`;
@@ -772,7 +830,6 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
     });
   }, []);
 
-  // Story Analytics: story read counter (once per story per session)
   const recordStoryView = useCallback((storyId: string) => {
     const cleanId = storyId.trim().slice(0, 100);
     if (!/^[a-zA-Z0-9_\-]+$/.test(cleanId)) return;
@@ -818,6 +875,7 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
         authBusy,
         authError,
         completedStoryIds,
+        favoriteStoryIds,
         quizScores,
         gameBestScores,
         streakCount,
@@ -828,6 +886,8 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
         signInWithGoogle,
         signOutUser,
         markStoryComplete,
+        toggleFavoriteStory,
+        isStoryFavorited,
         recordQuizScore,
         updateGameBestScore,
         recordLearningActivity,
@@ -836,6 +896,7 @@ export const UserProgressProvider: React.FC<{ children: React.ReactNode }> = ({ 
         toggleSaveWord,
         isWordSaved,
         toggleMasteredWord,
+        setWordMastered,
         addStarterWords,
         recordDailyVisit,
         recordStoryView,

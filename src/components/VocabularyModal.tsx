@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Story, VocabularyWord } from '../types/story';
+import { getStoryVocabWords } from '../utils/storyHelpers';
 import { X, Volume2, Search, BookMarked, Star } from 'lucide-react';
 import { speechNarrator, soundEffects } from '../utils/audio';
 import { useUserProgress } from '../context/UserProgressContext';
@@ -33,18 +34,13 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({
   if (!isOpen) return null;
 
   const activeStory = stories.find((s) => s.id === selectedStoryFilter) || stories[0];
-  const rawVocab: VocabularyWord[] = activeStory
-    ? activeStory.chapters.flatMap((c) => c.keyVocabulary)
-    : [];
-  const allVocab: VocabularyWord[] = Array.from(
-    new Map(rawVocab.map((v) => [v.word.toLowerCase(), v])).values()
-  );
+  const allVocab: VocabularyWord[] = activeStory ? getStoryVocabWords(activeStory) : [];
 
   const filteredVocab = allVocab.filter(
     (item) =>
       item.word.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.sinhalaMeaning.includes(searchQuery) ||
-      item.englishDefinition.toLowerCase().includes(searchQuery.toLowerCase())
+      item.example.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const currentFlashcard = filteredVocab[flashcardIndex] || filteredVocab[0];
@@ -55,20 +51,23 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(4,7,17,0.82)] backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-4 bg-[rgba(4,7,17,0.82)] backdrop-blur-sm">
       <div className="relative w-full max-w-2xl bg-[#0F172E] rounded-3xl shadow-2xl border border-[rgba(165,180,252,0.22)] overflow-hidden flex flex-col max-h-[85vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[rgba(165,180,252,0.16)] bg-[#0B1124]">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#1A264B] text-[#8CA8FF] border border-[rgba(129,140,248,0.28)] flex items-center justify-center">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[rgba(165,180,252,0.16)] bg-[#0B1124]">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-[#1A264B] text-[#8CA8FF] border border-[rgba(129,140,248,0.28)] flex items-center justify-center shrink-0">
               <BookMarked className="w-5 h-5" />
             </div>
-            <div>
-              <h2 className="text-base font-serif font-bold text-[#FFFFFF]">
-                වචන කෝෂය · Vocabulary Bank
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-base font-serif font-bold text-[#FFFFFF] truncate">
+                <span lang="si" className="font-sinhala">
+                  වචන කෝෂය
+                </span>{' '}
+                · Story Vocabulary
               </h2>
-              <p className="text-xs text-[#94A3B8]">
-                Key English words with Sinhala meanings and clear audio pronunciation
+              <p className="text-xs text-[#94A3B8] truncate">
+                Key English words with Sinhala meanings and example sentences
               </p>
             </div>
           </div>
@@ -86,8 +85,8 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({
         </div>
 
         {/* Story Selector & Mode Switch */}
-        <div className="px-6 py-3 border-b border-[rgba(165,180,252,0.14)] bg-[#0D1429] flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+        <div className="px-4 sm:px-6 py-3 border-b border-[rgba(165,180,252,0.14)] bg-[#0D1429] flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 max-w-full">
             {stories.map((s) => (
               <button
                 key={s.id}
@@ -104,7 +103,7 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({
                     : 'bg-[#151F3E] text-[#CBD5E1] hover:text-[#FFFFFF] hover:bg-[#1B2850]'
                 }`}
               >
-                {s.titleEn}
+                {s.title}
               </button>
             ))}
           </div>
@@ -116,7 +115,7 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({
                 soundEffects.playClick();
                 setActiveTab('list');
               }}
-              className={`px-3 py-1 rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
                 activeTab === 'list'
                   ? 'bg-[#5B6CFF] text-[#FFFFFF] font-semibold'
                   : 'text-[#CBD5E1] hover:text-[#FFFFFF]'
@@ -130,7 +129,7 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({
                 soundEffects.playClick();
                 setActiveTab('flashcard');
               }}
-              className={`px-3 py-1 rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
                 activeTab === 'flashcard'
                   ? 'bg-[#5B6CFF] text-[#FFFFFF] font-semibold'
                   : 'text-[#CBD5E1] hover:text-[#FFFFFF]'
@@ -143,12 +142,12 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({
 
         {/* Content Body */}
         {activeTab === 'list' ? (
-          <div className="overflow-y-auto p-6 space-y-3">
+          <div className="overflow-y-auto p-4 sm:p-6 space-y-3">
             <div className="relative mb-3">
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
               <input
                 type="text"
-                placeholder="Search words, English definitions, or සිංහල තේරුම්..."
+                placeholder="Search words, examples, or සිංහල තේරුම්..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-4 py-2.5 text-xs rounded-xl bg-[#0B1124] border border-[rgba(165,180,252,0.2)] text-[#FFFFFF] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[rgba(91,108,255,0.5)]"
@@ -166,29 +165,38 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({
                   >
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-1.5">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-bold text-[#FFFFFF]">{vocab.word}</h4>
-                          <span className="text-xs text-[#94A3B8] font-mono">{vocab.phonetic}</span>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <h4 className="text-sm font-bold text-[#FFFFFF] truncate">
+                            {vocab.word}
+                          </h4>
+                          {vocab.phonetic && (
+                            <span className="text-xs text-[#94A3B8] font-mono">
+                              {vocab.phonetic}
+                            </span>
+                          )}
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 shrink-0">
                           <button
                             type="button"
                             onClick={() => {
                               soundEffects.playClick();
                               toggleSaveWord(vocab, activeStory?.id || '');
                             }}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                            className={`inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer ${
                               isWordSaved(vocab.word)
-                                ? 'bg-[rgba(251,191,36,0.16)] text-[#FBBF24]'
+                                ? 'bg-[rgba(251,191,36,0.16)] text-[#FCD34D]'
                                 : 'text-[#94A3B8] hover:text-[#FBBF24] hover:bg-[#1E2C54]'
                             }`}
-                            title={isWordSaved(vocab.word) ? 'Saved in Wordbook' : 'Save to Wordbook'}
+                            title={
+                              isWordSaved(vocab.word) ? 'Saved in My Words' : 'Save to My Words'
+                            }
                           >
                             <Star
-                              className={`w-4 h-4 ${
-                                isWordSaved(vocab.word) ? 'fill-[#FBBF24]' : ''
+                              className={`w-3.5 h-3.5 ${
+                                isWordSaved(vocab.word) ? 'fill-[#FBBF24] text-[#FBBF24]' : ''
                               }`}
                             />
+                            <span>{isWordSaved(vocab.word) ? 'Saved' : 'Save'}</span>
                           </button>
                           <button
                             type="button"
@@ -201,18 +209,15 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({
                         </div>
                       </div>
 
-                      <p className="text-xs font-semibold text-[#9CB8FF] font-sinhala mb-1">
+                      <p lang="si" className="text-xs font-semibold text-[#9CB8FF] font-sinhala mb-1">
                         {vocab.sinhalaMeaning}
                       </p>
 
-                      <p className="text-xs text-[#CBD5E1] leading-relaxed">
-                        {vocab.englishDefinition}
-                      </p>
-                    </div>
-
-                    <div className="mt-3 pt-2 border-t border-[rgba(165,180,252,0.12)] flex items-center justify-between text-[11px] text-[#94A3B8]">
-                      <span className="capitalize">{vocab.partOfSpeech}</span>
-                      <span className="text-[#8CA8FF]">Click icon to listen</span>
+                      {vocab.example && (
+                        <p className="text-xs text-[#CBD5E1] leading-relaxed italic">
+                          &ldquo;{vocab.example}&rdquo;
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -220,7 +225,7 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({
             )}
           </div>
         ) : (
-          <div className="p-8 flex flex-col items-center justify-center min-h-[380px]">
+          <div className="p-6 sm:p-8 flex flex-col items-center justify-center min-h-[340px]">
             {filteredVocab.length > 0 && currentFlashcard ? (
               <div className="w-full max-w-sm flex flex-col items-center">
                 <div className="text-xs text-[#94A3B8] mb-2 font-mono tabular-nums">
@@ -239,17 +244,19 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({
                       <h3 className="text-2xl font-serif font-bold text-[#FFFFFF] mb-1">
                         {currentFlashcard.word}
                       </h3>
-                      <p className="text-xs font-mono text-[#94A3B8] mb-4">
-                        {currentFlashcard.phonetic}
-                      </p>
-                      <div className="flex items-center gap-2">
+                      {currentFlashcard.phonetic && (
+                        <p className="text-xs font-mono text-[#94A3B8] mb-4">
+                          {currentFlashcard.phonetic}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 mt-2">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleSpeak(currentFlashcard.word);
                           }}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#1D2B57] text-[#9CB8FF] text-xs font-semibold hover:bg-[#25366C] transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#1D2B57] text-[#9CB8FF] text-xs font-semibold hover:bg-[#25366C] transition-colors cursor-pointer"
                         >
                           <Volume2 className="w-3.5 h-3.5" />
                           <span>Pronounce</span>
@@ -261,7 +268,7 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({
                             soundEffects.playClick();
                             toggleSaveWord(currentFlashcard, activeStory?.id || '');
                           }}
-                          className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
                             isWordSaved(currentFlashcard.word)
                               ? 'bg-[rgba(251,191,36,0.2)] text-[#FCD34D] border border-[rgba(251,191,36,0.45)]'
                               : 'bg-[#1D2B57] text-[#CBD5E1] hover:text-[#FFFFFF]'
@@ -272,26 +279,30 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({
                               isWordSaved(currentFlashcard.word) ? 'fill-[#FBBF24] text-[#FBBF24]' : ''
                             }`}
                           />
-                          <span>{isWordSaved(currentFlashcard.word) ? 'Saved' : 'Save Word'}</span>
+                          <span>
+                            {isWordSaved(currentFlashcard.word) ? 'Saved' : 'Save to My Words'}
+                          </span>
                         </button>
                       </div>
                     </>
                   ) : (
                     <>
-                      <span className="text-xs font-medium text-[#8CA8FF] mb-2">
-                        සිංහල තේරුම & අර්ථය
+                      <span lang="si" className="text-xs font-medium text-[#8CA8FF] mb-2">
+                        සිංහල තේරුම · Meaning
                       </span>
-                      <h3 className="text-xl font-bold text-[#FFFFFF] font-sinhala mb-2">
+                      <h3 lang="si" className="text-xl font-bold text-[#FFFFFF] font-sinhala mb-2">
                         {currentFlashcard.sinhalaMeaning}
                       </h3>
-                      <p className="text-xs text-[#CBD5E1] max-w-xs leading-relaxed">
-                        {currentFlashcard.englishDefinition}
-                      </p>
+                      {currentFlashcard.example && (
+                        <p className="text-xs text-[#CBD5E1] max-w-xs leading-relaxed italic">
+                          &ldquo;{currentFlashcard.example}&rdquo;
+                        </p>
+                      )}
                     </>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3 mt-6">
+                <div className="flex items-center gap-2.5 mt-6">
                   <button
                     type="button"
                     disabled={flashcardIndex === 0}
@@ -335,12 +346,12 @@ export const VocabularyModal: React.FC<VocabularyModalProps> = ({
         )}
 
         {/* Footer */}
-        <div className="p-4 border-t border-[rgba(165,180,252,0.16)] bg-[#0B1124] flex items-center justify-between text-xs text-[#94A3B8]">
-          <span>Tap any highlighted word in the story anytime for instant meaning</span>
+        <div className="p-4 border-t border-[rgba(165,180,252,0.16)] bg-[#0B1124] flex items-center justify-between text-xs text-[#94A3B8] gap-3">
+          <span>Tap any underlined word in the story anytime</span>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-full bg-[#182242] hover:bg-[#1F2D57] text-[#FFFFFF] font-semibold border border-[rgba(165,180,252,0.22)] transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-full bg-[#182242] hover:bg-[#1F2D57] text-[#FFFFFF] font-semibold border border-[rgba(165,180,252,0.22)] transition-colors cursor-pointer shrink-0"
           >
             Close
           </button>

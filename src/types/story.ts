@@ -1,78 +1,72 @@
-export interface VocabularyWord {
-  word: string;
-  phonetic: string;
-  sinhalaMeaning: string;
-  englishDefinition: string;
-  partOfSpeech: 'noun' | 'verb' | 'adjective' | 'adverb' | 'preposition';
-  highlight?: boolean;
-}
+export type StoryCategoryId = 'folktales' | 'village' | 'nature' | 'inspiring-lives';
 
-export interface StorySentence {
-  id: string;
-  englishText: string;
-  sinhalaTranslation: string;
-  words: {
-    cleanWord: string;
-    displayWord: string;
-    vocab?: VocabularyWord;
-  }[];
-}
-
-export type SceneType = 'garden_seed' | 'fox_star' | 'ocean_lighthouse' | 'none';
-
-export type StoryCategoryId = 'folktales' | 'village' | 'nature' | 'heritage';
-
-export interface Chapter {
-  id: string;
-  chapterNumber: number;
-  titleEn: string;
-  titleSi: string;
-  subtitleEn: string;
-  subtitleSi: string;
-  summaryEn: string;
-  summarySi: string;
-  sentences: StorySentence[];
-  sceneType?: SceneType;
-  sceneMood?: string;
-  keyVocabulary: VocabularyWord[];
-  funFactEn: string;
-  funFactSi: string;
-}
-
-export interface StoryQuizQuestion {
-  id: string;
-  questionEn: string;
-  questionSi?: string;
-  options: string[];
-  optionsSi?: string[];
-  correctIndex: number;
-  explanationSi: string;
-}
+export type StoryLevel = 'Beginner' | 'Intermediate' | 'Advanced';
 
 export interface StoryCategory {
   id: StoryCategoryId;
   titleEn: string;
   titleSi: string;
-  shortLabelEn: string;
-  shortLabelSi: string;
   descriptionSi: string;
-  coverImage: string;
+  image: string;
+}
+
+export interface StoryVocabularyItem {
+  word: string;
+  sinhalaMeaning: string;
+  example: string;
+  phonetic?: string;
+  partOfSpeech?: string;
+}
+
+export interface StoryQuizItem {
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+export interface StoryMoral {
+  messageEn: string;
+  messageSi: string;
+  adviceSi: string;
 }
 
 export interface Story {
   id: string;
   categoryId: StoryCategoryId;
-  categoryTitleEn: string;
-  categoryTitleSi: string;
-  titleEn: string;
+  title: string;
   titleSi: string;
-  level: 'Beginner (A1)' | 'Elementary (A2)' | 'Intermediate (B1)';
-  genreEn: string;
-  genreSi: string;
-  estimatedMinutes: number;
-  coverAccent: string;
-  coverImage?: string;
-  theme: 'nature' | 'mystic' | 'maritime' | 'steampunk' | 'adventure' | 'scifi' | 'community';
-  chapters: Chapter[];
-  quiz: StoryQuizQuestion[];
+  summarySi: string;
+  level: StoryLevel;
+  readingMinutes: number;
+  hasAudio: boolean;
+  coverImage: string;
+  paragraphs: string[];
+  paragraphsSi?: string[];
+  vocabulary: StoryVocabularyItem[];
+  quiz: StoryQuizItem[];
+  moral?: StoryMoral;
+}
+
+export interface VocabularyWord {
+  word: string;
+  sinhalaMeaning: string;
+  example: string;
+  englishDefinition: string;
+  phonetic?: string;
+  partOfSpeech?: string;
+}
+
+export interface StoryWordToken {
+  cleanWord: string;
+  displayWord: string;
+  vocab?: VocabularyWord;
+}
+
+export interface StorySentence {
+  id: string;
+  paragraphIndex: number;
+  englishText: string;
+  sinhalaTranslation?: string;
+  words: StoryWordToken[];
 }

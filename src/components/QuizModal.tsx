@@ -39,7 +39,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
   const isCorrect = selectedOption === currentQ?.correctIndex;
 
   const handleSubmitAnswer = () => {
-    if (selectedOption === null) return;
+    if (selectedOption === null || !currentQ) return;
     setIsAnswerSubmitted(true);
     if (selectedOption === currentQ.correctIndex) {
       setScore((prev) => prev + 1);
@@ -58,11 +58,15 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
     } else {
       setIsQuizFinished(true);
       recordQuizScore(story.id, score, story.quiz.length);
-      confetti({
-        particleCount: 70,
-        spread: 60,
-        origin: { y: 0.6 },
-      });
+      try {
+        confetti({
+          particleCount: 70,
+          spread: 60,
+          origin: { y: 0.6 },
+        });
+      } catch {
+        // Ignore confetti fallback
+      }
       soundEffects.playCompletionChime();
     }
   };
@@ -77,19 +81,22 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[rgba(4,7,17,0.82)] backdrop-blur-sm">
-      <div className="relative w-full max-w-lg bg-[#0F172E] rounded-3xl shadow-2xl border border-[rgba(165,180,252,0.22)] overflow-hidden flex flex-col">
-        {/* Midnight Indigo Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[rgba(165,180,252,0.16)] bg-[#0B1124]">
-          <div className="flex items-center gap-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3.5 sm:p-4 bg-[rgba(4,7,17,0.82)] backdrop-blur-sm">
+      <div className="relative w-full max-w-lg bg-[#0F172E] rounded-3xl shadow-2xl border border-[rgba(165,180,252,0.22)] overflow-hidden flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[rgba(165,180,252,0.16)] bg-[#0B1124]">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="w-9 h-9 rounded-xl bg-[#1A264B] text-[#8CA8FF] border border-[rgba(129,140,248,0.28)] flex items-center justify-center shrink-0">
               <Award className="w-4 h-4" />
             </div>
-            <div>
-              <h2 className="text-base font-serif font-bold text-[#FFFFFF]">
-                Comprehension Quiz · කතාව තේරුම් ගැනීම
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-base font-serif font-bold text-[#FFFFFF] truncate">
+                Comprehension Quiz ·{' '}
+                <span lang="si" className="font-sinhala">
+                  ප්‍රශ්නාවලිය
+                </span>
               </h2>
-              <p className="text-xs text-[#94A3B8]">{story.titleEn}</p>
+              <p className="text-xs text-[#94A3B8] truncate">{story.title}</p>
             </div>
           </div>
 
@@ -99,7 +106,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
               soundEffects.playClick();
               onClose();
             }}
-            className="p-2 rounded-lg text-[#94A3B8] hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.1)] transition-colors cursor-pointer"
+            className="p-2 rounded-lg text-[#94A3B8] hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.1)] transition-colors cursor-pointer shrink-0"
             aria-label="Close quiz"
           >
             <X className="w-5 h-5" />
@@ -107,10 +114,22 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
         </div>
 
         {/* Body */}
-        <div className="p-6">
-          {!isQuizFinished && currentQ ? (
+        <div className="p-4 sm:p-6 overflow-y-auto">
+          {story.quiz.length === 0 ? (
+            <div className="text-center py-8">
+              <p lang="si" className="text-sm font-sinhala text-[#CBD5E1]">
+                මෙම කතාව සඳහා ප්‍රශ්නාවලිය ඉක්මනින් එකතු වනු ඇත.
+              </p>
+              <button
+                type="button"
+                onClick={onClose}
+                className="mt-5 px-5 py-2.5 rounded-full bg-indigo-cta text-[#FFFFFF] text-xs font-bold cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          ) : !isQuizFinished && currentQ ? (
             <div>
-              {/* Progress & Score Metadata */}
               <div className="flex items-center justify-between text-xs text-[#94A3B8] mb-4 tabular-nums">
                 <span>
                   Question {currentQuestionIndex + 1} of {story.quiz.length}
@@ -120,16 +139,15 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
                 </span>
               </div>
 
-              {/* English-Only Question */}
               <div className="flex items-start justify-between gap-3 mb-5">
                 <h3 className="text-base sm:text-lg font-serif font-bold text-[#FFFFFF] leading-snug">
-                  {currentQ.questionEn}
+                  {currentQ.question}
                 </h3>
                 <button
                   type="button"
                   onClick={() => {
                     soundEffects.playClick();
-                    speechNarrator.speakText(currentQ.questionEn, {});
+                    speechNarrator.speakText(currentQ.question, {});
                   }}
                   className="p-2 rounded-lg bg-[#182242] hover:bg-[#21305C] text-[#9CB8FF] transition-colors shrink-0 cursor-pointer"
                   title="Listen to question in English"
@@ -139,7 +157,6 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
                 </button>
               </div>
 
-              {/* English-Only Answer Options */}
               <div className="space-y-2.5">
                 {currentQ.options.map((option, idx) => {
                   const isSelected = selectedOption === idx;
@@ -172,7 +189,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
                         soundEffects.playClick();
                         setSelectedOption(idx);
                       }}
-                      className={`w-full text-left p-3.5 rounded-xl border text-sm transition-colors flex items-center gap-3 cursor-pointer disabled:cursor-default ${optionStyle}`}
+                      className={`w-full text-left p-3.5 rounded-xl border text-sm transition-colors flex items-center gap-3 cursor-pointer disabled:cursor-default min-h-[46px] ${optionStyle}`}
                     >
                       <span
                         className={`w-6 h-6 rounded-md text-xs font-mono font-bold flex items-center justify-center shrink-0 ${
@@ -196,7 +213,6 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
                 })}
               </div>
 
-              {/* Feedback Banner After Answer Submission */}
               {isAnswerSubmitted && (
                 <div
                   className={`mt-4 p-3.5 rounded-xl border text-xs flex items-start gap-2.5 ${
@@ -214,21 +230,20 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
                     <p className="font-bold">
                       {isCorrect ? 'Correct! · නිවැරදියි!' : 'Not quite right · වැරදියි'}
                     </p>
-                    <p className="text-xs font-sinhala mt-1 leading-relaxed opacity-90">
-                      {currentQ.explanationSi}
+                    <p lang="si" className="text-xs font-sinhala mt-1 leading-relaxed opacity-90">
+                      {currentQ.explanation}
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Bottom Action Buttons */}
               <div className="mt-6 flex items-center justify-end gap-2">
                 {!isAnswerSubmitted ? (
                   <button
                     type="button"
                     disabled={selectedOption === null}
                     onClick={handleSubmitAnswer}
-                    className="px-5 py-2.5 rounded-full bg-indigo-cta text-[#FFFFFF] text-xs font-bold disabled:opacity-40 transition-all cursor-pointer whitespace-nowrap"
+                    className="px-5 py-2.5 rounded-full bg-indigo-cta text-[#FFFFFF] text-xs font-bold disabled:opacity-40 transition-all cursor-pointer whitespace-nowrap min-h-[42px]"
                   >
                     Check Answer · පිළිතුර බලන්න
                   </button>
@@ -236,7 +251,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
                   <button
                     type="button"
                     onClick={handleNextQuestion}
-                    className="px-5 py-2.5 rounded-full bg-indigo-cta text-[#FFFFFF] text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
+                    className="px-5 py-2.5 rounded-full bg-indigo-cta text-[#FFFFFF] text-xs font-semibold transition-all cursor-pointer whitespace-nowrap min-h-[42px]"
                   >
                     {currentQuestionIndex < story.quiz.length - 1
                       ? 'Next Question · ඊළඟ ප්‍රශ්නය'
@@ -251,20 +266,26 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
                 <Award className="w-7 h-7" />
               </div>
               <h3 className="text-xl font-serif font-bold text-[#FFFFFF] mb-1">
-                Quiz Completed! · විශිෂ්ටයි!
+                Quiz Completed! ·{' '}
+                <span lang="si" className="font-sinhala">
+                  විශිෂ්ටයි!
+                </span>
               </h3>
               <p className="text-sm text-[#CBD5E1] mb-2 tabular-nums">
                 You scored <span className="font-bold text-[#8CA8FF]">{score}</span> out of{' '}
                 <span className="font-bold text-[#FFFFFF]">{story.quiz.length}</span>
               </p>
               <p className="text-xs text-[#6EE7B7] font-medium mb-6 tabular-nums">
-                Saved Best Score: {quizScores[story.id] ?? Math.round((score / Math.max(1, story.quiz.length)) * 100)}% ✔ Story Completed
+                Saved Best Score:{' '}
+                {quizScores[story.id] ??
+                  Math.round((score / Math.max(1, story.quiz.length)) * 100)}
+                % ✔ Story Finished
               </p>
-              <div className="flex items-center justify-center gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-3">
                 <button
                   type="button"
                   onClick={handleResetQuiz}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[rgba(165,180,252,0.22)] bg-[#162140] text-xs font-semibold text-[#E2E8F0] hover:bg-[#1E2C54] transition-colors cursor-pointer whitespace-nowrap"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-[rgba(165,180,252,0.22)] bg-[#162140] text-xs font-semibold text-[#E2E8F0] hover:bg-[#1E2C54] transition-colors cursor-pointer whitespace-nowrap min-h-[42px]"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Try Again</span>
@@ -272,7 +293,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({ isOpen, onClose, story }) 
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2 rounded-full bg-indigo-cta text-[#FFFFFF] font-bold text-xs transition-all cursor-pointer whitespace-nowrap"
+                  className="px-5 py-2.5 rounded-full bg-indigo-cta text-[#FFFFFF] font-bold text-xs transition-all cursor-pointer whitespace-nowrap min-h-[42px]"
                 >
                   Done · අවසන්
                 </button>

@@ -144,7 +144,12 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] text-[#E2E8F0] border border-[rgba(165,180,252,0.22)] text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4 text-[#8CA8FF]" />
-          <span>පටුනට (Stories)</span>
+          <span>
+            Home /{' '}
+            <span lang="si" className="font-sinhala">
+              මුල් පිටුව
+            </span>
+          </span>
         </button>
       </div>
 
@@ -266,54 +271,65 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({
           )}
         </section>
 
-        {/* Most Read Stories Leaderboard */}
         <section className="bg-[rgba(15,23,46,0.92)] rounded-3xl border border-[rgba(165,180,252,0.18)] p-6">
           <div className="mb-5">
             <h2 className="text-base font-serif font-bold text-[#FFFFFF]">
-              Most Popular Stories · වැඩියෙන්ම කියවූ කතා
+              Most Popular Stories ·{' '}
+              <span lang="si" className="font-sinhala">
+                වැඩියෙන්ම කියවූ කතා
+              </span>
             </h2>
-            <p className="text-xs font-sinhala text-[#94A3B8]">
+            <p lang="si" className="text-xs font-sinhala text-[#94A3B8]">
               කතාවක් මත ක්ලික් කර කෙලින්ම කියවිය හැක
             </p>
           </div>
 
-          <div className="space-y-3">
-            {rankedStories.map(({ story, views }, idx) => {
-              const widthPct = views > 0 ? Math.max(6, Math.round((views / maxStoryViews) * 100)) : 0;
-              return (
-                <button
-                  key={story.id}
-                  type="button"
-                  onClick={() => {
-                    soundEffects.playPageFlip();
-                    onSelectStory(story.id);
-                  }}
-                  className="w-full text-left p-3 rounded-2xl bg-[#131C38] hover:bg-[#18244A] border border-[rgba(165,180,252,0.14)] hover:border-[rgba(108,123,255,0.55)] transition-all cursor-pointer group"
-                >
-                  <div className="flex items-center justify-between gap-2 mb-1.5">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-xs font-mono font-bold text-[#8CA8FF] w-5 shrink-0">
-                        0{idx + 1}
-                      </span>
-                      <span className="text-sm font-semibold text-[#FFFFFF] group-hover:text-[#9CB8FF] truncate">
-                        {story.titleEn}
-                      </span>
+          {rankedStories.length === 0 ? (
+            <div className="h-40 flex flex-col items-center justify-center text-center text-xs text-[#94A3B8]">
+              <p lang="si" className="font-sinhala font-semibold text-[#CBD5E1]">
+                කතා ඉක්මනින් එනවා · Stories coming soon
+              </p>
+              <p className="mt-1">Popular reading statistics will appear here as stories are added.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {rankedStories.map(({ story, views }, idx) => {
+                const widthPct = views > 0 ? Math.max(6, Math.round((views / maxStoryViews) * 100)) : 0;
+                return (
+                  <button
+                    key={story.id}
+                    type="button"
+                    onClick={() => {
+                      soundEffects.playPageFlip();
+                      onSelectStory(story.id);
+                    }}
+                    className="w-full text-left p-3 rounded-2xl bg-[#131C38] hover:bg-[#18244A] border border-[rgba(165,180,252,0.14)] hover:border-[rgba(108,123,255,0.55)] transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-xs font-mono font-bold text-[#8CA8FF] w-5 shrink-0">
+                          0{idx + 1}
+                        </span>
+                        <span className="text-sm font-semibold text-[#FFFFFF] group-hover:text-[#9CB8FF] truncate">
+                          {story.title}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0 text-xs font-mono text-[#CBD5E1] tabular-nums">
+                        <span>{views} reads</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-[#8CA8FF]" />
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0 text-xs font-mono text-[#CBD5E1] tabular-nums">
-                      <span>{views} reads</span>
-                      <ArrowRight className="w-3.5 h-3.5 text-[#8CA8FF]" />
+                    <div className="w-full h-1.5 rounded-full bg-[#0B1124] overflow-hidden">
+                      <div
+                        style={{ width: `${widthPct}%` }}
+                        className="h-full rounded-full bg-[#6366F1]"
+                      />
                     </div>
-                  </div>
-                  <div className="w-full h-1.5 rounded-full bg-[#0B1124] overflow-hidden">
-                    <div
-                      style={{ width: `${widthPct}%` }}
-                      className="h-full rounded-full bg-[#6366F1]"
-                    />
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </section>
       </div>
 

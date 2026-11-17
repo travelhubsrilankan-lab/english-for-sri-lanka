@@ -1,5 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Story, Chapter, VocabularyWord, StorySentence } from '../types/story';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Story, StorySentence, VocabularyWord } from '../types/story';
+import { CATEGORIES } from '../data/categories';
+import { STORIES } from '../data/stories';
+import {
+  LEVEL_META,
+  extractStorySentences,
+  getStoryVocabWords,
+} from '../utils/storyHelpers';
 import {
   Play,
   Pause,
@@ -21,36 +28,26 @@ import {
   Sun,
   Moon,
   BookText,
+  Lightbulb,
+  Heart,
+  Clock,
+  FolderOpen,
 } from 'lucide-react';
 import { speechNarrator, soundEffects } from '../utils/audio';
 import { VocabularyModal } from './VocabularyModal';
 import { QuizModal } from './QuizModal';
 import { SpeakingPracticeModal } from './SpeakingPracticeModal';
-import { STORIES } from '../data/stories';
 import { useUserProgress, ReaderTheme } from '../context/UserProgressContext';
 
 interface BookContainerProps {
-  story: Story;
-  currentChapterNumber: number;
-  onChapterChange: (newChapterNum: number) => void;
+  story?: Story;
   onBackToStories: () => void;
-}
-
-interface FlatSentenceItem {
-  sentence: StorySentence;
-  chapterNumber: number;
-  chapterTitleEn: string;
-  chapterTitleSi: string;
-  globalIndex: number;
 }
 
 export const BookContainer: React.FC<BookContainerProps> = ({
   story,
-  currentChapterNumber,
-  onChapterChange,
   onBackToStories,
 }) => {
-  const [readMode, setReadMode] = useState<'full' | 'parts'>('full');
   const [showSinhala, setShowSinhala] = useState<boolean>(true);
   const [activeSentenceIndex, setActiveSentenceIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -71,44 +68,27 @@ export const BookContainer: React.FC<BookContainerProps> = ({
     isWordSaved,
     markStoryComplete,
     completedStoryIds,
+    toggleFavoriteStory,
+    isStoryFavorited,
     recordStoryView,
   } = useUserProgress();
-
-  const isStoryCompleted = completedStoryIds.includes(story.id);
 
   const isPlayingRef = useRef<boolean>(false);
   const advanceTimerRef = useRef<number | null>(null);
 
-  const currentChapter: Chapter =
-    story.chapters.find((c) => c.chapterNumber === currentChapterNumber) || story.chapters[0];
+  const sentences = useMemo(
+    () => (story ? extractStorySentences(story) : []),
+    [story]
+  );
 
-  const activeSentenceItems: FlatSentenceItem[] =
-    readMode === 'full'
-      ? story.chapters
-          .flatMap((chap) =>
-            chap.sentences.map((sentence) => ({
-              sentence,
-              chapterNumber: chap.chapterNumber,
-              chapterTitleEn: chap.titleEn,
-              chapterTitleSi: chap.titleSi,
-              globalIndex: 0,
-            }))
-          )
-          .map((item, idx) => ({ ...item, globalIndex: idx }))
-      : currentChapter.sentences.map((sentence, idx) => ({
-          sentence,
-          chapterNumber: currentChapter.chapterNumber,
-          chapterTitleEn: currentChapter.titleEn,
-          chapterTitleSi: currentChapter.titleSi,
-          globalIndex: idx,
-        }));
+  const visibleVocabulary = useMemo(
+    () => (story ? getStoryVocabWords(story) : []),
+    [story]
+  );
 
-  const rawVocab: VocabularyWord[] =
-    readMode === 'full'
-      ? story.chapters.flatMap((c) => c.keyVocabulary)
-      : currentChapter.keyVocabulary;
-  const visibleVocabulary: VocabularyWord[] = Array.from(
-    new Map(rawVocab.map((v) => [v.word.toLowerCase(), v])).values()
+  const categoryInfo = useMemo(
+    () => (story ? CATEGORIES.find((c) => c.id === story.categoryId) : undefined),
+    [story]
   );
 
   const clearPendingTimer = () => {
@@ -130,11 +110,13 @@ export const BookContainer: React.FC<BookContainerProps> = ({
     setIsVoiceActive(false);
     setInspectingWord(null);
     speechNarrator.stop();
-  }, [story.id, readMode, currentChapterNumber]);
+  }, [story?.id]);
 
   useEffect(() => {
-    recordStoryView(story.id);
-  }, [story.id, recordStoryView]);
+    if (story?.id) {
+      recordStoryView(story.id);
+    }
+  }, [story?.id, recordStoryView]);
 
   useEffect(() => {
     return () => {
@@ -144,26 +126,57 @@ export const BookContainer: React.FC<BookContainerProps> = ({
     };
   }, []);
 
+  if (!story) {
+    return (
+      <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-12">
+        <div className="bg-[rgba(15,23,46,0.92)] rounded-3xl border border-[rgba(165,180,252,0.18)] p-8 text-center shadow-[0_18px_48px_rgba(0,0,0,0.5)]">
+          <div className="w-12 h-12 mx-auto rounded-xl bg-[#162140] text-[#8CA8FF] border border-[rgba(165,180,252,0.22)] flex items-center justify-center mb-4">
+            <FolderOpen className="w-6 h-6" />
+          </div>
+          <h1 className="text-xl sm:text-2xl font-serif font-bold text-[#FFFFFF]">
+            <span lang="si" className="font-sinhala">
+              කතා ඉක්මනින් එනවා
+            </span>{' '}
+            · Stories coming soon
+          </h1>
+          <p lang="si" className="mt-2 text-xs sm:text-sm font-sinhala text-[#94A3B8] max-w-md mx-auto">
+            ඔබ සෙවූ කතාව දැනට පුස්තකාලයේ නොමැත. මුල් පිටුවට ගොස් කතා කාණ්ඩ බලන්න.
+          </p>
+          <button
+            type="button"
+            onClick={onBackToStories}
+            className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-indigo-cta text-[#FFFFFF] text-xs font-semibold cursor-pointer min-h-[44px]"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Home / මුල් පිටුව</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const isStoryCompleted = completedStoryIds.includes(story.id);
+  const isFavorited = isStoryFavorited(story.id);
+  const levelInfo = LEVEL_META[story.level] || LEVEL_META.Beginner;
+  const hasSinhalaParagraphs = Boolean(story.paragraphsSi && story.paragraphsSi.length > 0);
+
   const playSentence = (index: number, autoContinue: boolean) => {
     clearPendingTimer();
 
-    if (index >= activeSentenceItems.length) {
+    if (sentences.length === 0) return;
+
+    if (index >= sentences.length) {
       setIsVoiceActive(false);
-      if (readMode === 'parts' && currentChapterNumber < story.chapters.length) {
-        soundEffects.playPageFlip();
-        onChapterChange(currentChapterNumber + 1);
-      } else {
-        isPlayingRef.current = false;
-        setIsPlaying(false);
-        markStoryComplete(story.id);
-        soundEffects.playCompletionChime();
-      }
+      isPlayingRef.current = false;
+      setIsPlaying(false);
+      markStoryComplete(story.id);
+      soundEffects.playCompletionChime();
       return;
     }
 
     setActiveSentenceIndex(index);
     setIsVoiceActive(true);
-    const target = activeSentenceItems[index].sentence;
+    const target = sentences[index];
 
     speechNarrator.speakText(target.englishText, {
       onEnd: () => {
@@ -202,7 +215,7 @@ export const BookContainer: React.FC<BookContainerProps> = ({
 
   const handleNextSentence = () => {
     soundEffects.playClick();
-    const nextIdx = Math.min(activeSentenceItems.length - 1, activeSentenceIndex + 1);
+    const nextIdx = Math.min(sentences.length - 1, activeSentenceIndex + 1);
     playSentence(nextIdx, isPlayingRef.current);
   };
 
@@ -219,20 +232,32 @@ export const BookContainer: React.FC<BookContainerProps> = ({
     setSpeechRate((prev) => (prev <= 0.85 ? 1.0 : 0.8));
   };
 
+  const handleSpeakMoral = () => {
+    if (!story.moral) return;
+    soundEffects.playClick();
+    clearPendingTimer();
+    isPlayingRef.current = false;
+    setIsPlaying(false);
+    setIsVoiceActive(true);
+    speechNarrator.speakText(story.moral.messageEn, {
+      onEnd: () => setIsVoiceActive(false),
+    });
+  };
+
   const handleShareStory = async () => {
     soundEffects.playClick();
     const shareUrl = window.location.href;
     try {
       if (navigator.share) {
         await navigator.share({
-          title: `${story.titleEn} – StoryGlow`,
-          text: `${story.titleEn} (${story.titleSi}) - Read in English with Sinhala meanings on StoryGlow`,
+          title: `${story.title} – StoryGlow`,
+          text: `${story.title} (${story.titleSi}) - Read in English with Sinhala meanings on StoryGlow`,
           url: shareUrl,
         });
         return;
       }
     } catch {
-      // Cancelled native share sheet or unsupported in embedded iframe; fallback to clipboard
+      // Cancelled native share or blocked in iframe; fall back to clipboard
     }
     try {
       await navigator.clipboard.writeText(shareUrl);
@@ -242,8 +267,6 @@ export const BookContainer: React.FC<BookContainerProps> = ({
       // Ignore clipboard failures
     }
   };
-
-  let runningGlobalIndex = 0;
 
   const enFontClasses = [
     'text-base sm:text-[17px]',
@@ -280,6 +303,10 @@ export const BookContainer: React.FC<BookContainerProps> = ({
       comfortBar: string;
       comfortBtnIdle: string;
       speakBtn: string;
+      moralCard: string;
+      moralBadge: string;
+      moralAdviceBox: string;
+      moralAdviceText: string;
     }
   > = {
     night: {
@@ -304,6 +331,12 @@ export const BookContainer: React.FC<BookContainerProps> = ({
       comfortBtnIdle: 'text-[#CBD5E1] hover:text-[#FFFFFF] hover:bg-[#182345]',
       speakBtn:
         'bg-[#1A264B] hover:bg-[#243566] text-[#9CB8FF] border border-[rgba(129,140,248,0.25)]',
+      moralCard:
+        'bg-[rgba(24,35,70,0.92)] border-[rgba(251,191,36,0.35)] shadow-[0_12px_32px_-12px_rgba(251,191,36,0.18)]',
+      moralBadge:
+        'bg-[rgba(251,191,36,0.14)] text-[#FCD34D] border border-[rgba(251,191,36,0.3)]',
+      moralAdviceBox: 'bg-[rgba(15,23,46,0.75)] border-[rgba(165,180,252,0.16)]',
+      moralAdviceText: 'text-[#E2E8F0]',
     },
     light: {
       sheet: 'bg-[#F8FAFC] border-[#CBD5E1]',
@@ -324,6 +357,11 @@ export const BookContainer: React.FC<BookContainerProps> = ({
       comfortBar: 'bg-[#E2E8F0] border-[#CBD5E1]',
       comfortBtnIdle: 'text-[#334155] hover:text-[#0F172A] hover:bg-[#CBD5E1]',
       speakBtn: 'bg-[#E0E7FF] hover:bg-[#C7D2FE] text-[#3730A3] border border-[#A5B4FC]',
+      moralCard:
+        'bg-[#FFFBEB] border-[#FCD34D] shadow-[0_10px_28px_-10px_rgba(217,119,6,0.16)]',
+      moralBadge: 'bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A]',
+      moralAdviceBox: 'bg-[#FFFFFF] border-[#FDE68A]',
+      moralAdviceText: 'text-[#1E293B]',
     },
     sepia: {
       sheet: 'bg-[#F5EBD6] border-[#D6C3A0]',
@@ -344,16 +382,21 @@ export const BookContainer: React.FC<BookContainerProps> = ({
       comfortBar: 'bg-[#E9DBBF] border-[#D6C3A0]',
       comfortBtnIdle: 'text-[#4A3525] hover:text-[#2C1E12] hover:bg-[#DFCFAF]',
       speakBtn: 'bg-[#EEDEC0] hover:bg-[#E4CFA8] text-[#7C2D12] border border-[#C8AD82]',
+      moralCard:
+        'bg-[#EFE1C6] border-[#B45309] shadow-[0_10px_28px_-10px_rgba(139,69,19,0.18)]',
+      moralBadge: 'bg-[#E5CFA3] text-[#78350F] border border-[#C8AD82]',
+      moralAdviceBox: 'bg-[#FAF3E3] border-[#D6C3A0]',
+      moralAdviceText: 'text-[#2C1E12]',
     },
   };
 
   const t = themePalette[readerTheme];
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 flex flex-col items-center">
+    <div className="w-full max-w-4xl mx-auto px-3.5 sm:px-6 py-5 sm:py-7 flex flex-col items-center">
       {/* Top Reader Controls Bar */}
-      <div className="w-full flex flex-wrap items-center justify-between gap-3 mb-5">
-        <div className="flex items-center gap-2">
+      <div className="w-full flex flex-wrap items-center justify-between gap-2.5 mb-4">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => {
@@ -362,17 +405,34 @@ export const BookContainer: React.FC<BookContainerProps> = ({
               speechNarrator.stop();
               onBackToStories();
             }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] text-[#E2E8F0] border border-[rgba(165,180,252,0.22)] text-xs sm:text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] text-[#E2E8F0] border border-[rgba(165,180,252,0.22)] text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap min-h-[40px]"
           >
-            <ArrowLeft className="w-4 h-4 text-[#8CA8FF]" />
-            <span>පටුනට (Categories)</span>
+            <ArrowLeft className="w-3.5 h-3.5 text-[#8CA8FF]" />
+            <span>Home / <span lang="si" className="font-sinhala">මුල් පිටුව</span></span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              soundEffects.playClick();
+              toggleFavoriteStory(story.id);
+            }}
+            aria-label={isFavorited ? 'Remove story from favorites' : 'Favorite this story'}
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap min-h-[40px] ${
+              isFavorited
+                ? 'bg-[rgba(159,18,57,0.75)] border-[rgba(251,113,133,0.65)] text-[#FFE4E6]'
+                : 'bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] text-[#CBD5E1] hover:text-[#FFFFFF] border-[rgba(165,180,252,0.22)]'
+            }`}
+          >
+            <Heart className={`w-3.5 h-3.5 ${isFavorited ? 'fill-[#FB7185] text-[#FB7185]' : 'text-[#FB7185]'}`} />
+            <span>{isFavorited ? 'Favorited' : 'Favorite'}</span>
           </button>
 
           <button
             type="button"
             onClick={handleShareStory}
             aria-label="Share story link"
-            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-xs sm:text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap min-h-[40px] ${
               linkCopied
                 ? 'bg-[rgba(16,185,129,0.16)] border-[rgba(52,211,153,0.45)] text-[#6EE7B7]'
                 : 'bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] text-[#CBD5E1] hover:text-[#FFFFFF] border-[rgba(165,180,252,0.22)]'
@@ -381,7 +441,7 @@ export const BookContainer: React.FC<BookContainerProps> = ({
             {linkCopied ? (
               <>
                 <Check className="w-3.5 h-3.5 text-[#6EE7B7]" />
-                <span>Link Copied!</span>
+                <span>Copied!</span>
               </>
             ) : (
               <>
@@ -394,64 +454,41 @@ export const BookContainer: React.FC<BookContainerProps> = ({
 
         {/* Right Controls */}
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 bg-[rgba(13,20,41,0.92)] border border-[rgba(165,180,252,0.16)] p-1 rounded-xl">
+          {hasSinhalaParagraphs && (
             <button
               type="button"
               onClick={() => {
                 soundEffects.playClick();
-                setReadMode('full');
+                setShowSinhala((prev) => !prev);
               }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                readMode === 'full'
-                  ? 'bg-indigo-tab text-[#FFFFFF]'
-                  : 'text-[#CBD5E1] hover:text-[#FFFFFF]'
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap min-h-[40px] ${
+                showSinhala
+                  ? 'bg-[#172347] border-[rgba(108,123,255,0.5)] text-[#AFC4FF]'
+                  : 'bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] border-[rgba(165,180,252,0.18)] text-[#CBD5E1]'
               }`}
             >
-              තනි පිටුව (Full Story)
+              <Languages className="w-3.5 h-3.5 text-[#8CA8FF]" />
+              <span lang="si" className="font-sinhala">
+                {showSinhala ? 'සිංහල: පෙනේ' : 'සිංහල: සැඟවී'}
+              </span>
             </button>
+          )}
+
+          {visibleVocabulary.length > 0 && (
             <button
               type="button"
               onClick={() => {
                 soundEffects.playClick();
-                setReadMode('parts');
+                setIsVocabModalOpen(true);
               }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                readMode === 'parts'
-                  ? 'bg-indigo-tab text-[#FFFFFF]'
-                  : 'text-[#CBD5E1] hover:text-[#FFFFFF]'
-              }`}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] text-[#E2E8F0] border border-[rgba(165,180,252,0.22)] text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap min-h-[40px]"
             >
-              කොටස් 4 (Parts)
+              <BookMarked className="w-3.5 h-3.5 text-[#8CA8FF]" />
+              <span lang="si" className="font-sinhala">
+                වචන ({visibleVocabulary.length})
+              </span>
             </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              soundEffects.playClick();
-              setShowSinhala((prev) => !prev);
-            }}
-            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-              showSinhala
-                ? 'bg-[#172347] border-[rgba(108,123,255,0.5)] text-[#AFC4FF]'
-                : 'bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] border-[rgba(165,180,252,0.18)] text-[#CBD5E1]'
-            }`}
-          >
-            <Languages className="w-3.5 h-3.5 text-[#8CA8FF]" />
-            <span>{showSinhala ? 'සිංහල අර්ථ: පෙනේ' : 'සිංහල අර්ථ: සැඟවී'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              soundEffects.playClick();
-              setIsVocabModalOpen(true);
-            }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] text-[#E2E8F0] border border-[rgba(165,180,252,0.22)] text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0"
-          >
-            <BookMarked className="w-3.5 h-3.5 text-[#8CA8FF]" />
-            <span>වචන කෝෂය</span>
-          </button>
+          )}
 
           {story.quiz.length > 0 && (
             <button
@@ -460,46 +497,18 @@ export const BookContainer: React.FC<BookContainerProps> = ({
                 soundEffects.playClick();
                 setIsQuizModalOpen(true);
               }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-indigo-cta text-[#FFFFFF] text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-indigo-cta text-[#FFFFFF] text-xs font-bold transition-all cursor-pointer whitespace-nowrap min-h-[40px]"
             >
               <Award className="w-3.5 h-3.5" />
-              <span>ප්‍රශ්න (Quiz)</span>
+              <span>Quiz · ප්‍රශ්න</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Chapter Sub-Switcher when in Parts Mode */}
-      {readMode === 'parts' && (
-        <div className="w-full flex items-center justify-center mb-4">
-          <div className="inline-flex items-center gap-1 bg-[rgba(13,20,41,0.92)] border border-[rgba(165,180,252,0.16)] p-1 rounded-xl">
-            {story.chapters.map((chap) => {
-              const isCurrent = chap.chapterNumber === currentChapterNumber;
-              return (
-                <button
-                  key={chap.id}
-                  type="button"
-                  onClick={() => {
-                    soundEffects.playPageFlip();
-                    onChapterChange(chap.chapterNumber);
-                  }}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 tabular-nums ${
-                    isCurrent
-                      ? 'bg-indigo-tab text-[#FFFFFF]'
-                      : 'text-[#CBD5E1] hover:text-[#FFFFFF]'
-                  }`}
-                >
-                  0{chap.chapterNumber} කොටස
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
       {/* Reading Comfort & Theme Strip */}
       <div
-        className={`w-full mb-4 px-4 py-2.5 rounded-2xl border flex flex-wrap items-center justify-between gap-3 ${t.comfortBar}`}
+        className={`w-full mb-4 px-3.5 sm:px-4 py-2.5 rounded-2xl border flex flex-wrap items-center justify-between gap-3 ${t.comfortBar}`}
       >
         <div className="flex items-center gap-2 text-xs">
           <span className={`font-semibold ${t.meta}`}>Text Size:</span>
@@ -511,7 +520,7 @@ export const BookContainer: React.FC<BookContainerProps> = ({
                 soundEffects.playClick();
                 setReaderFontSize(readerFontSize - 1);
               }}
-              className={`px-2.5 py-1 rounded-lg font-bold border border-transparent disabled:opacity-40 cursor-pointer ${t.comfortBtnIdle}`}
+              className={`px-3 py-1.5 rounded-lg font-bold border border-transparent disabled:opacity-40 cursor-pointer min-h-[36px] ${t.comfortBtnIdle}`}
               title="Smaller text"
             >
               A-
@@ -523,7 +532,7 @@ export const BookContainer: React.FC<BookContainerProps> = ({
                 soundEffects.playClick();
                 setReaderFontSize(readerFontSize + 1);
               }}
-              className={`px-2.5 py-1 rounded-lg font-bold border border-transparent disabled:opacity-40 cursor-pointer ${t.comfortBtnIdle}`}
+              className={`px-3 py-1.5 rounded-lg font-bold border border-transparent disabled:opacity-40 cursor-pointer min-h-[36px] ${t.comfortBtnIdle}`}
               title="Larger text"
             >
               A+
@@ -531,7 +540,7 @@ export const BookContainer: React.FC<BookContainerProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        <div className="flex flex-wrap items-center gap-1 text-xs">
           <span className={`font-semibold mr-1 ${t.meta}`}>Theme:</span>
           <button
             type="button"
@@ -539,7 +548,7 @@ export const BookContainer: React.FC<BookContainerProps> = ({
               soundEffects.playClick();
               setReaderTheme('night');
             }}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold cursor-pointer transition-colors ${
+            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-semibold cursor-pointer transition-colors min-h-[36px] ${
               readerTheme === 'night' ? 'bg-indigo-tab text-[#FFFFFF]' : t.comfortBtnIdle
             }`}
           >
@@ -552,7 +561,7 @@ export const BookContainer: React.FC<BookContainerProps> = ({
               soundEffects.playClick();
               setReaderTheme('light');
             }}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold cursor-pointer transition-colors ${
+            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-semibold cursor-pointer transition-colors min-h-[36px] ${
               readerTheme === 'light' ? 'bg-indigo-tab text-[#FFFFFF]' : t.comfortBtnIdle
             }`}
           >
@@ -565,7 +574,7 @@ export const BookContainer: React.FC<BookContainerProps> = ({
               soundEffects.playClick();
               setReaderTheme('sepia');
             }}
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold cursor-pointer transition-colors ${
+            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg font-semibold cursor-pointer transition-colors min-h-[36px] ${
               readerTheme === 'sepia' ? 'bg-indigo-tab text-[#FFFFFF]' : t.comfortBtnIdle
             }`}
           >
@@ -577,17 +586,17 @@ export const BookContainer: React.FC<BookContainerProps> = ({
 
       {/* Main Reader Storybook Sheet */}
       <article
-        className={`w-full backdrop-blur-md rounded-3xl p-6 sm:p-9 border shadow-[0_24px_70px_-12px_rgba(0,0,0,0.45)] flex flex-col justify-between transition-colors ${t.sheet}`}
+        className={`w-full backdrop-blur-md rounded-3xl p-4 sm:p-8 border shadow-[0_24px_70px_-12px_rgba(0,0,0,0.45)] flex flex-col justify-between transition-colors ${t.sheet}`}
       >
-        {/* Compact Story Title & Artwork Banner */}
+        {/* Story Title & Metadata Banner */}
         <header
           className={`pb-5 mb-6 border-b flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 ${t.borderSubtle}`}
         >
           {story.coverImage && (
-            <div className="w-28 sm:w-32 aspect-[4/3] rounded-xl overflow-hidden shrink-0 border border-[rgba(165,180,252,0.22)] bg-[#090F22] shadow-[0_10px_24px_-8px_rgba(0,0,0,0.45)]">
+            <div className="w-full sm:w-36 aspect-[16/9] sm:aspect-[4/3] rounded-xl overflow-hidden shrink-0 border border-[rgba(165,180,252,0.22)] bg-[#090F22] shadow-[0_10px_24px_-8px_rgba(0,0,0,0.45)]">
               <img
                 src={story.coverImage}
-                alt={`${story.titleEn} - ${story.titleSi}`}
+                alt={`${story.title} - ${story.titleSi}`}
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover"
               />
@@ -595,211 +604,187 @@ export const BookContainer: React.FC<BookContainerProps> = ({
           )}
 
           <div className="min-w-0 flex-1">
-            <div className={`flex flex-wrap items-center gap-2 text-xs font-medium mb-2 ${t.meta}`}>
-              <span className={`font-semibold ${t.accent}`}>{story.categoryTitleEn}</span>
-              <span aria-hidden="true">·</span>
-              <span className="font-sinhala">{story.categoryTitleSi}</span>
-              <span aria-hidden="true">·</span>
-              <span>{story.level}</span>
-              <span aria-hidden="true">·</span>
-              <span className="tabular-nums">{story.estimatedMinutes} min read</span>
-              {isStoryCompleted && (
+            <div className={`flex flex-wrap items-center gap-2 text-xs font-medium mb-2.5 ${t.meta}`}>
+              {categoryInfo && (
                 <>
+                  <span className={`font-semibold ${t.accent}`}>{categoryInfo.titleEn}</span>
                   <span aria-hidden="true">·</span>
-                  <span className="inline-flex items-center gap-1 font-sinhala font-bold text-[#10B981]">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>කියවා අවසන්</span>
-                  </span>
                 </>
+              )}
+
+              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg font-semibold ${levelInfo.badgeClass}`}>
+                <span>{levelInfo.labelEn}</span>
+                <span aria-hidden="true">·</span>
+                <span lang="si" className="font-sinhala">
+                  {levelInfo.labelSi}
+                </span>
+              </span>
+
+              <span className="inline-flex items-center gap-1 tabular-nums">
+                <Clock className="w-3.5 h-3.5" />
+                <span>{story.readingMinutes} min read</span>
+              </span>
+
+              {story.hasAudio && (
+                <span className="inline-flex items-center gap-1">
+                  <Volume2 className="w-3.5 h-3.5" />
+                  <span>Audio</span>
+                </span>
+              )}
+
+              {isStoryCompleted && (
+                <span className="inline-flex items-center gap-1 font-bold text-[#10B981]">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Finished ✔</span>
+                </span>
               )}
             </div>
 
-            <h1 className={`text-2xl sm:text-3xl font-serif font-bold tracking-tight ${t.title}`}>
-              {readMode === 'full' ? story.titleEn : currentChapter.titleEn}
+            <h1 className={`text-xl sm:text-3xl font-serif font-bold tracking-tight ${t.title}`}>
+              {story.title}
             </h1>
             <p
+              lang="si"
               className={`text-sm sm:text-base font-sinhala font-medium mt-1 tracking-[0.01em] ${t.subtitle}`}
             >
-              {readMode === 'full' ? story.titleSi : currentChapter.titleSi}
+              {story.titleSi}
+            </p>
+            <p lang="si" className={`text-xs font-sinhala mt-2 leading-relaxed ${t.meta}`}>
+              {story.summarySi}
             </p>
           </div>
         </header>
 
-        {/* Story Body */}
-        {readMode === 'full' ? (
-          <div className="space-y-8">
-            {story.chapters.map((chapter) => (
-              <section key={chapter.id} className="space-y-3.5">
-                <div className={`flex items-center gap-2 text-xs border-b pb-2 ${t.meta} ${t.borderSubtle}`}>
-                  <span className={`font-mono font-semibold tabular-nums ${t.accent}`}>
-                    0{chapter.chapterNumber}
-                  </span>
-                  <span aria-hidden="true">·</span>
-                  <span className={`font-serif font-semibold ${t.subtitle}`}>{chapter.titleEn}</span>
-                  <span aria-hidden="true">·</span>
-                  <span className="font-sinhala">{chapter.titleSi}</span>
-                </div>
+        {/* Interactive Clickable Sentences Body */}
+        <div className="space-y-3">
+          {sentences.map((sentence, sIdx) => {
+            const isActive = activeSentenceIndex === sIdx;
 
-                <div className="space-y-3">
-                  {chapter.sentences.map((sentence) => {
-                    const globalIdx = runningGlobalIndex++;
-                    const isActive = activeSentenceIndex === globalIdx;
-
-                    return (
-                      <div
-                        key={sentence.id}
-                        onClick={() => {
-                          soundEffects.playClick();
-                          playSentence(globalIdx, isPlayingRef.current);
-                        }}
-                        className={`p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer ${
-                          isActive ? t.cardActive : t.cardIdle
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <p
-                            className={`flex-1 font-serif leading-relaxed tracking-[0.005em] ${activeEnFont} ${t.enText}`}
-                          >
-                            {sentence.words.map((w, wIdx) => {
-                              const hasVocab = !!w.vocab;
-                              return (
-                                <span
-                                  key={wIdx}
-                                  onClick={(e) => {
-                                    if (hasVocab) {
-                                      e.stopPropagation();
-                                      handleWordClick(w.vocab);
-                                    }
-                                  }}
-                                  className={`inline-block mr-1.5 transition-colors ${
-                                    hasVocab
-                                      ? `font-medium underline decoration-2 underline-offset-4 cursor-pointer ${t.vocabWord}`
-                                      : ''
-                                  }`}
-                                  title={
-                                    hasVocab
-                                      ? `සිංහල තේරුම: ${w.vocab?.sinhalaMeaning}`
-                                      : undefined
-                                  }
-                                >
-                                  {w.displayWord}
-                                </span>
-                              );
-                            })}
-                          </p>
-
-                          <button
-                            type="button"
-                            onClick={(e) => {
+            return (
+              <div
+                key={sentence.id}
+                onClick={() => {
+                  soundEffects.playClick();
+                  playSentence(sIdx, isPlayingRef.current);
+                }}
+                className={`p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer ${
+                  isActive ? t.cardActive : t.cardIdle
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2.5 sm:gap-3">
+                  <p
+                    className={`flex-1 font-serif leading-relaxed tracking-[0.005em] ${activeEnFont} ${t.enText}`}
+                  >
+                    {sentence.words.map((w, wIdx) => {
+                      const hasVocab = !!w.vocab;
+                      return (
+                        <span
+                          key={wIdx}
+                          onClick={(e) => {
+                            if (hasVocab) {
                               e.stopPropagation();
-                              soundEffects.playClick();
-                              setSpeakingSentence(sentence);
-                            }}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold shrink-0 transition-colors cursor-pointer ${t.speakBtn}`}
-                            title="Practice speaking this sentence"
-                          >
-                            <Mic className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">Speak</span>
-                          </button>
-                        </div>
-
-                        {showSinhala && (
-                          <p
-                            className={`font-sinhala mt-2.5 leading-relaxed tracking-[0.01em] ${activeSiFont} ${t.siText}`}
-                          >
-                            {sentence.sinhalaTranslation}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {currentChapter.sentences.map((sentence, sIdx) => {
-              const isActive = activeSentenceIndex === sIdx;
-
-              return (
-                <div
-                  key={sentence.id}
-                  onClick={() => {
-                    soundEffects.playClick();
-                    playSentence(sIdx, isPlayingRef.current);
-                  }}
-                  className={`p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer ${
-                    isActive ? t.cardActive : t.cardIdle
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <p
-                      className={`flex-1 font-serif leading-relaxed tracking-[0.005em] ${activeEnFont} ${t.enText}`}
-                    >
-                      {sentence.words.map((w, wIdx) => {
-                        const hasVocab = !!w.vocab;
-                        return (
-                          <span
-                            key={wIdx}
-                            onClick={(e) => {
-                              if (hasVocab) {
-                                e.stopPropagation();
-                                handleWordClick(w.vocab);
-                              }
-                            }}
-                            className={`inline-block mr-1.5 transition-colors ${
-                              hasVocab
-                                ? `font-medium underline decoration-2 underline-offset-4 cursor-pointer ${t.vocabWord}`
-                                : ''
-                            }`}
-                            title={
-                              hasVocab ? `සිංහල තේරුම: ${w.vocab?.sinhalaMeaning}` : undefined
+                              handleWordClick(w.vocab);
                             }
-                          >
-                            {w.displayWord}
-                          </span>
-                        );
-                      })}
-                    </p>
+                          }}
+                          className={`inline-block mr-1.5 transition-colors ${
+                            hasVocab
+                              ? `font-medium underline decoration-2 underline-offset-4 cursor-pointer ${t.vocabWord}`
+                              : ''
+                          }`}
+                          title={
+                            hasVocab ? `සිංහල තේරුම: ${w.vocab?.sinhalaMeaning}` : undefined
+                          }
+                        >
+                          {w.displayWord}
+                        </span>
+                      );
+                    })}
+                  </p>
 
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        soundEffects.playClick();
-                        setSpeakingSentence(sentence);
-                      }}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold shrink-0 transition-colors cursor-pointer ${t.speakBtn}`}
-                      title="Practice speaking this sentence"
-                    >
-                      <Mic className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Speak</span>
-                    </button>
-                  </div>
-
-                  {showSinhala && (
-                    <p
-                      className={`font-sinhala mt-2.5 leading-relaxed tracking-[0.01em] ${activeSiFont} ${t.siText}`}
-                    >
-                      {sentence.sinhalaTranslation}
-                    </p>
-                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      soundEffects.playClick();
+                      setSpeakingSentence(sentence);
+                    }}
+                    className={`inline-flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-semibold shrink-0 transition-colors cursor-pointer min-h-[36px] ${t.speakBtn}`}
+                    title="Practice speaking this sentence"
+                  >
+                    <Mic className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Speak</span>
+                  </button>
                 </div>
-              );
-            })}
-          </div>
+
+                {showSinhala && sentence.sinhalaTranslation && (
+                  <p
+                    lang="si"
+                    className={`font-sinhala mt-2.5 leading-relaxed tracking-[0.01em] ${activeSiFont} ${t.siText}`}
+                  >
+                    {sentence.sinhalaTranslation}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Optional Story Ending Moral Card */}
+        {story.moral && (
+          <section
+            aria-label="Story message and life advice"
+            className={`mt-8 p-5 sm:p-6 rounded-2xl border transition-colors ${t.moralCard}`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div
+                className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold font-sinhala ${t.moralBadge}`}
+              >
+                <Lightbulb className="w-3.5 h-3.5" />
+                <span lang="si">කතාවෙන් ගත හැකි පණිවිඩය · Story Moral</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSpeakMoral}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${t.speakBtn}`}
+                title="Listen to the story moral in English"
+              >
+                <Volume2 className="w-3.5 h-3.5" />
+                <span>Listen</span>
+              </button>
+            </div>
+
+            <p className={`font-serif font-semibold leading-relaxed ${activeEnFont} ${t.enText}`}>
+              &ldquo;{story.moral.messageEn}&rdquo;
+            </p>
+
+            <p
+              lang="si"
+              className={`font-sinhala font-medium mt-2 leading-relaxed ${activeSiFont} ${t.siText}`}
+            >
+              {story.moral.messageSi}
+            </p>
+
+            <div className={`mt-4 p-3.5 sm:p-4 rounded-xl border ${t.moralAdviceBox}`}>
+              <p lang="si" className={`text-xs font-bold font-sinhala mb-1 ${t.accent}`}>
+                ජීවිතයට වටිනා උපදේශය (Practical Advice)
+              </p>
+              <p lang="si" className={`font-sinhala leading-relaxed ${activeSiFont} ${t.moralAdviceText}`}>
+                {story.moral.adviceSi}
+              </p>
+            </div>
+          </section>
         )}
 
         {/* Key Vocabulary Reference Section */}
         {visibleVocabulary.length > 0 && (
           <div className={`mt-8 pt-6 border-t ${t.borderSubtle}`}>
             <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-              <h2 className={`text-xs font-bold font-sinhala ${t.subtitle}`}>
+              <h2 lang="si" className={`text-xs font-bold font-sinhala ${t.subtitle}`}>
                 ප්‍රධාන ඉංග්‍රීසි වචන ({visibleVocabulary.length})
               </h2>
-              <span className={`text-xs font-sinhala ${t.meta}`}>
-                ⭐ ඔබේ Wordbook එකට Save කිරීමට තරු සලකුණ ඔබන්න
+              <span lang="si" className={`text-xs font-sinhala ${t.meta}`}>
+                ⭐ My Words වෙත Save කිරීමට තරු සලකුණ ඔබන්න
               </span>
             </div>
 
@@ -814,7 +799,7 @@ export const BookContainer: React.FC<BookContainerProps> = ({
                   >
                     <div className="min-w-0">
                       <p className={`text-xs font-bold truncate ${t.vocabTitle}`}>{vocab.word}</p>
-                      <p className={`text-xs font-sinhala font-medium truncate ${t.vocabSi}`}>
+                      <p lang="si" className={`text-xs font-sinhala font-medium truncate ${t.vocabSi}`}>
                         {vocab.sinhalaMeaning}
                       </p>
                     </div>
@@ -826,16 +811,16 @@ export const BookContainer: React.FC<BookContainerProps> = ({
                           soundEffects.playClick();
                           toggleSaveWord(vocab, story.id);
                         }}
-                        className="p-1.5 rounded-lg hover:bg-[rgba(251,191,36,0.18)] transition-colors cursor-pointer"
-                        title={saved ? 'Remove from Wordbook' : 'Save to Wordbook'}
+                        className="p-2 rounded-lg hover:bg-[rgba(251,191,36,0.18)] transition-colors cursor-pointer"
+                        title={saved ? 'Remove from My Words' : 'Save to My Words'}
                       >
                         <Star
-                          className={`w-3.5 h-3.5 ${
+                          className={`w-4 h-4 ${
                             saved ? 'fill-[#FBBF24] text-[#FBBF24]' : t.meta
                           }`}
                         />
                       </button>
-                      <Volume2 className={`w-3.5 h-3.5 ${t.accent}`} />
+                      <Volume2 className={`w-4 h-4 ${t.accent}`} />
                     </div>
                   </div>
                 );
@@ -844,172 +829,145 @@ export const BookContainer: React.FC<BookContainerProps> = ({
           </div>
         )}
 
-        {/* Bottom Action Row */}
-        {readMode === 'parts' && currentChapterNumber < story.chapters.length ? (
-          <div className={`mt-8 pt-5 border-t flex justify-end ${t.borderSubtle}`}>
-            <button
-              type="button"
-              onClick={() => {
-                soundEffects.playPageFlip();
-                onChapterChange(currentChapterNumber + 1);
-              }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-indigo-cta text-[#FFFFFF] font-semibold text-xs sm:text-sm transition-all cursor-pointer whitespace-nowrap"
-            >
-              <span>ඊළඟ කොටස (Part 0{currentChapterNumber + 1})</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        ) : (
-          <div
-            className={`mt-8 pt-5 border-t flex flex-wrap items-center justify-between gap-3 ${t.borderSubtle}`}
-          >
-            <button
-              type="button"
-              onClick={() => {
-                soundEffects.playCompletionChime();
-                markStoryComplete(story.id);
-              }}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold font-sinhala transition-colors cursor-pointer ${
-                isStoryCompleted
-                  ? 'bg-[rgba(16,185,129,0.2)] border border-[rgba(52,211,153,0.45)] text-[#10B981]'
-                  : 'bg-[#182242] hover:bg-[#1F2D57] border border-[rgba(165,180,252,0.22)] text-[#E2E8F0]'
-              }`}
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>
-                {isStoryCompleted ? 'කියවා අවසන් (Completed ✔)' : 'කතාව අවසන් ලෙස සලකුණු කරන්න ✔'}
-              </span>
-            </button>
-
-            <div className="flex items-center gap-2">
-              {story.quiz.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    soundEffects.playClick();
-                    setIsQuizModalOpen(true);
-                  }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-cta text-[#FFFFFF] font-bold text-xs transition-all cursor-pointer whitespace-nowrap"
-                >
-                  <Award className="w-3.5 h-3.5" />
-                  <span>ප්‍රශ්නාවලිය කරන්න (Take Quiz)</span>
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={onBackToStories}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#182242] hover:bg-[#1E2B52] text-[#E2E8F0] border border-[rgba(165,180,252,0.22)] font-semibold text-xs transition-colors cursor-pointer whitespace-nowrap"
-              >
-                <span>පටුනට යන්න</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-      </article>
-
-      {/* Bottom Audio Narration Bar */}
-      <div className="sticky bottom-4 w-full max-w-xl mt-5 px-4 py-2.5 rounded-2xl bg-[rgba(15,23,46,0.96)] backdrop-blur-md border border-[rgba(165,180,252,0.22)] shadow-[0_16px_45px_rgba(0,0,0,0.7)] text-[#F1F5F9] flex items-center justify-between gap-3">
-        <div className="text-xs tabular-nums">
-          <span className="font-bold text-[#9CB8FF]">{activeSentenceIndex + 1}</span>
-          <span className="text-[#94A3B8]"> / {activeSentenceItems.length}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handlePrevSentence}
-            disabled={activeSentenceIndex === 0}
-            className="p-2 rounded-lg bg-[#182242] hover:bg-[#1F2C54] disabled:opacity-30 text-[#E2E8F0] transition-colors cursor-pointer"
-            title="කලින් වැකිය (Previous Sentence)"
-          >
-            <SkipBack className="w-4 h-4" />
-          </button>
-
-          <button
-            type="button"
-            onClick={handleTogglePlay}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-indigo-cta text-[#FFFFFF] font-bold text-xs sm:text-sm transition-all cursor-pointer whitespace-nowrap"
-          >
-            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-[#FFFFFF]" />}
-            <span>{isPlaying ? 'නවත්වන්න' : 'අසන්න (Play)'}</span>
-
-            {isVoiceActive && (
-              <span className="flex items-end gap-0.5 h-3 ml-1">
-                <span className="w-0.5 bg-[#FFFFFF] rounded-full animate-wave-1" />
-                <span className="w-0.5 bg-[#FFFFFF] rounded-full animate-wave-2" />
-                <span className="w-0.5 bg-[#FFFFFF] rounded-full animate-wave-3" />
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleNextSentence}
-            disabled={activeSentenceIndex === activeSentenceItems.length - 1}
-            className="p-2 rounded-lg bg-[#182242] hover:bg-[#1F2C54] disabled:opacity-30 text-[#E2E8F0] transition-colors cursor-pointer"
-            title="ඊළඟ වැකිය (Next Sentence)"
-          >
-            <SkipForward className="w-4 h-4" />
-          </button>
-        </div>
-
-        <button
-          type="button"
-          onClick={toggleSpeed}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#182242] hover:bg-[#1F2C54] text-[#E2E8F0] border border-[rgba(165,180,252,0.16)] text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
-          title="කියවීමේ වේගය"
+        {/* Bottom Completion & Navigation Row */}
+        <div
+          className={`mt-8 pt-5 border-t flex flex-wrap items-center justify-between gap-3 ${t.borderSubtle}`}
         >
-          <Gauge className="w-3.5 h-3.5 text-[#8CA8FF]" />
-          <span>{speechRate <= 0.85 ? 'සෙමින්' : 'සාමාන්‍ය'}</span>
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => {
+              soundEffects.playCompletionChime();
+              markStoryComplete(story.id);
+            }}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold font-sinhala transition-colors cursor-pointer min-h-[42px] ${
+              isStoryCompleted
+                ? 'bg-[rgba(16,185,129,0.2)] border border-[rgba(52,211,153,0.45)] text-[#10B981]'
+                : 'bg-[#182242] hover:bg-[#1F2D57] border border-[rgba(165,180,252,0.22)] text-[#E2E8F0]'
+            }`}
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            <span lang="si">
+              {isStoryCompleted ? 'කියවා අවසන් (Finished ✔)' : 'කතාව අවසන් ලෙස සලකුණු කරන්න ✔'}
+            </span>
+          </button>
 
-      {/* Floating Word Meaning Card */}
-      {inspectingWord && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm p-4 rounded-2xl bg-[#101830] text-[#F1F5F9] shadow-2xl border border-[rgba(129,140,248,0.35)] flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-serif font-bold text-[#9CB8FF]">
-                {inspectingWord.word}
-              </h3>
-              <span className="text-xs text-[#94A3B8] font-mono">
-                {inspectingWord.phonetic}
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-2">
+            {story.quiz.length > 0 && (
               <button
                 type="button"
                 onClick={() => {
                   soundEffects.playClick();
-                  toggleSaveWord(inspectingWord, story.id);
+                  setIsQuizModalOpen(true);
                 }}
-                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                  isWordSaved(inspectingWord.word)
-                    ? 'bg-[rgba(251,191,36,0.18)] text-[#FCD34D] border border-[rgba(251,191,36,0.4)]'
-                    : 'bg-[#1A264B] text-[#CBD5E1] hover:text-[#FFFFFF]'
-                }`}
-                title="Save word to My Wordbook"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-indigo-cta text-[#FFFFFF] font-bold text-xs transition-all cursor-pointer whitespace-nowrap min-h-[42px]"
               >
-                <Star
-                  className={`w-3.5 h-3.5 ${
-                    isWordSaved(inspectingWord.word) ? 'fill-[#FBBF24] text-[#FBBF24]' : ''
-                  }`}
-                />
-                <span>{isWordSaved(inspectingWord.word) ? 'Saved' : 'Save'}</span>
+                <Award className="w-3.5 h-3.5" />
+                <span>Take Quiz · ප්‍රශ්නාවලිය</span>
               </button>
+            )}
+            <button
+              type="button"
+              onClick={onBackToStories}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#182242] hover:bg-[#1E2B52] text-[#E2E8F0] border border-[rgba(165,180,252,0.22)] font-semibold text-xs transition-colors cursor-pointer whitespace-nowrap min-h-[42px]"
+            >
+              <span>Home / මුල් පිටුව</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </article>
+
+      {/* Bottom Audio Narration Bar */}
+      {story.hasAudio && sentences.length > 0 && (
+        <div className="sticky bottom-3 w-full max-w-xl mt-5 px-3.5 sm:px-4 py-2.5 rounded-2xl bg-[rgba(15,23,46,0.96)] backdrop-blur-md border border-[rgba(165,180,252,0.22)] shadow-[0_16px_45px_rgba(0,0,0,0.7)] text-[#F1F5F9] flex items-center justify-between gap-2 sm:gap-3">
+          <div className="text-xs tabular-nums">
+            <span className="font-bold text-[#9CB8FF]">{activeSentenceIndex + 1}</span>
+            <span className="text-[#94A3B8]"> / {sentences.length}</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              onClick={handlePrevSentence}
+              disabled={activeSentenceIndex === 0}
+              className="p-2.5 rounded-lg bg-[#182242] hover:bg-[#1F2C54] disabled:opacity-30 text-[#E2E8F0] transition-colors cursor-pointer"
+              title="Previous Sentence"
+            >
+              <SkipBack className="w-4 h-4" />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleTogglePlay}
+              className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full bg-indigo-cta text-[#FFFFFF] font-bold text-xs sm:text-sm transition-all cursor-pointer whitespace-nowrap min-h-[40px]"
+            >
+              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-[#FFFFFF]" />}
+              <span lang="si" className="font-sinhala">
+                {isPlaying ? 'නවත්වන්න' : 'අසන්න'}
+              </span>
+
+              {isVoiceActive && (
+                <span className="flex items-end gap-0.5 h-3 ml-1">
+                  <span className="w-0.5 bg-[#FFFFFF] rounded-full animate-wave-1" />
+                  <span className="w-0.5 bg-[#FFFFFF] rounded-full animate-wave-2" />
+                  <span className="w-0.5 bg-[#FFFFFF] rounded-full animate-wave-3" />
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleNextSentence}
+              disabled={activeSentenceIndex === sentences.length - 1}
+              className="p-2.5 rounded-lg bg-[#182242] hover:bg-[#1F2C54] disabled:opacity-30 text-[#E2E8F0] transition-colors cursor-pointer"
+              title="Next Sentence"
+            >
+              <SkipForward className="w-4 h-4" />
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={toggleSpeed}
+            className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-2 rounded-lg bg-[#182242] hover:bg-[#1F2C54] text-[#E2E8F0] border border-[rgba(165,180,252,0.16)] text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap min-h-[38px]"
+            title="Speech speed"
+          >
+            <Gauge className="w-3.5 h-3.5 text-[#8CA8FF]" />
+            <span lang="si" className="font-sinhala">
+              {speechRate <= 0.85 ? 'සෙමින්' : 'සාමාන්‍ය'}
+            </span>
+          </button>
+        </div>
+      )}
+
+      {/* Floating Word Meaning Popup with "Save to My Words" Button */}
+      {inspectingWord && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-md p-4 rounded-2xl bg-[#101830] text-[#F1F5F9] shadow-2xl border border-[rgba(129,140,248,0.4)] flex flex-col gap-3">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <h3 className="text-lg font-serif font-bold text-[#9CB8FF]">
+                {inspectingWord.word}
+              </h3>
+              {inspectingWord.phonetic && (
+                <span className="text-xs text-[#94A3B8] font-mono">
+                  {inspectingWord.phonetic}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => speechNarrator.speakWord(inspectingWord.word)}
-                className="p-1.5 rounded-lg bg-[#1A264B] text-[#9CB8FF] hover:bg-[#233366] transition-colors cursor-pointer"
-                title="නැවත අසන්න"
+                className="p-2 rounded-lg bg-[#1A264B] text-[#9CB8FF] hover:bg-[#233366] transition-colors cursor-pointer"
+                title="Listen pronunciation"
               >
                 <Volume2 className="w-4 h-4" />
               </button>
               <button
                 type="button"
                 onClick={() => setInspectingWord(null)}
-                className="p-1.5 rounded-lg text-[#94A3B8] hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.1)] transition-colors cursor-pointer"
+                className="p-2 rounded-lg text-[#94A3B8] hover:text-[#FFFFFF] hover:bg-[rgba(255,255,255,0.1)] transition-colors cursor-pointer"
                 aria-label="Close word definition"
               >
                 <X className="w-4 h-4" />
@@ -1017,15 +975,41 @@ export const BookContainer: React.FC<BookContainerProps> = ({
             </div>
           </div>
 
-          <div className="p-2.5 rounded-xl bg-[#172347] border border-[rgba(129,140,248,0.28)]">
-            <p className="text-sm font-bold text-[#FFFFFF] font-sinhala">
+          <div className="p-3 rounded-xl bg-[#172347] border border-[rgba(129,140,248,0.28)]">
+            <p lang="si" className="text-sm font-bold text-[#FFFFFF] font-sinhala">
               {inspectingWord.sinhalaMeaning}
             </p>
           </div>
 
-          <p className="text-xs text-[#CBD5E1] leading-relaxed">
-            {inspectingWord.englishDefinition}
-          </p>
+          {inspectingWord.example && (
+            <p className="text-xs text-[#CBD5E1] leading-relaxed italic">
+              &ldquo;{inspectingWord.example}&rdquo;
+            </p>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              soundEffects.playClick();
+              toggleSaveWord(inspectingWord, story.id);
+            }}
+            className={`w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer min-h-[42px] ${
+              isWordSaved(inspectingWord.word)
+                ? 'bg-[rgba(251,191,36,0.18)] text-[#FCD34D] border border-[rgba(251,191,36,0.45)]'
+                : 'bg-indigo-cta text-[#FFFFFF]'
+            }`}
+          >
+            <Star
+              className={`w-4 h-4 ${
+                isWordSaved(inspectingWord.word) ? 'fill-[#FBBF24] text-[#FBBF24]' : ''
+              }`}
+            />
+            <span>
+              {isWordSaved(inspectingWord.word)
+                ? 'Saved to My Words ✔'
+                : 'Save to My Words'}
+            </span>
+          </button>
         </div>
       )}
 

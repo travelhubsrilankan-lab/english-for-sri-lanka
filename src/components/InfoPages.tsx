@@ -76,7 +76,7 @@ export const InfoPages: React.FC<InfoPagesProps> = ({
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] text-[#E2E8F0] border border-[rgba(165,180,252,0.22)] text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
         >
           <ArrowLeft className="w-3.5 h-3.5 text-[#8CA8FF]" />
-          <span>Back to Stories</span>
+              <span>Home / <span lang="si" className="font-sinhala">මුල් පිටුව</span></span>
         </button>
 
         <div className="flex flex-wrap items-center gap-1 p-1 bg-[rgba(13,20,41,0.92)] border border-[rgba(165,180,252,0.16)] rounded-xl">
@@ -85,7 +85,7 @@ export const InfoPages: React.FC<InfoPagesProps> = ({
               key={tab.id}
               type="button"
               onClick={() => onNavigateInfo(tab.id)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap min-h-[38px] ${
                 page === tab.id
                   ? 'bg-indigo-tab text-[#FFFFFF]'
                   : 'text-[#CBD5E1] hover:text-[#FFFFFF]'
@@ -99,7 +99,7 @@ export const InfoPages: React.FC<InfoPagesProps> = ({
       </div>
 
       {/* Main Content Card */}
-      <article className="bg-[rgba(15,23,46,0.94)] rounded-3xl border border-[rgba(165,180,252,0.2)] p-6 sm:p-10 shadow-[0_24px_60px_rgba(0,0,0,0.6)]">
+      <article className="bg-[rgba(15,23,46,0.94)] rounded-3xl border border-[rgba(165,180,252,0.2)] p-5 sm:p-10 shadow-[0_24px_60px_rgba(0,0,0,0.6)]">
         {page === 'about' && (
           <div className="space-y-6">
             <header className="border-b border-[rgba(165,180,252,0.16)] pb-5">
@@ -107,17 +107,17 @@ export const InfoPages: React.FC<InfoPagesProps> = ({
                 About StoryGlow
               </div>
               <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#FFFFFF]">
-                Learning English Through Sri Lankan Stories
+                Learning English Through Stories
               </h1>
-              <p className="text-sm font-sinhala text-[#CBD5E1] mt-2 leading-relaxed">
-                ශ්‍රී ලාංකික පාඨකයන්ට හා සිසුන්ට කතා කියවමින් සහ විනෝදජනක ක්‍රීඩා හරහා පහසුවෙන් ඉංග්‍රීසි ඉගෙන ගැනීමට නිර්මාණය කළ අන්තර්ක්‍රියාකාරී වෙබ් අඩවියකි.
+              <p lang="si" className="text-sm font-sinhala text-[#CBD5E1] mt-2 leading-relaxed">
+                ශ්‍රී ලාංකික පාඨකයන්ට හා සිසුන්ට කතා කියවමින් සහ විනෝදජනක පුහුණු ක්‍රීඩා හරහා පහසුවෙන් ඉංග්‍රීසි ඉගෙන ගැනීමට නිර්මාණය කළ අන්තර්ක්‍රියාකාරී වෙබ් අඩවියකි.
               </p>
             </header>
 
             <section className="space-y-3 text-sm text-[#CBD5E1] leading-relaxed">
               <h2 className="text-lg font-serif font-bold text-[#FFFFFF]">Our Mission</h2>
               <p>
-                StoryGlow is an educational reading and vocabulary platform created specifically for Sri Lankan students and everyday English learners. Instead of memorizing dry word lists, learners read engaging, culturally familiar stories—from village CTB bus adventures and Yala National Park elephants to Sigiriya legends and Galle Fort history.
+                StoryGlow is an educational reading and vocabulary platform created specifically for Sri Lankan students and everyday English learners. Learners read engaging stories across Sri Lankan culture, nature, village life, and inspiring world inventors with instant Sinhala word support.
               </p>
             </section>
 
@@ -128,17 +128,17 @@ export const InfoPages: React.FC<InfoPagesProps> = ({
                   <span>Bilingual Guided Reading</span>
                 </div>
                 <p className="text-xs text-[#CBD5E1] leading-relaxed">
-                  Every story includes sentence-by-sentence English narration, speed control, tap-to-translate vocabulary words with phonetic guides, optional Sinhala translations, and comprehension quizzes.
+                  Every story includes sentence-by-sentence English audio narration, reading comfort controls, tap-to-translate vocabulary words with example sentences, and comprehension quizzes.
                 </p>
               </div>
 
               <div className="p-4 rounded-2xl bg-[#121B36] border border-[rgba(165,180,252,0.16)]">
                 <div className="flex items-center gap-2 text-[#6EE7B7] font-semibold text-sm mb-2">
                   <Gamepad2 className="w-4 h-4" />
-                  <span>Interactive Word Games</span>
+                  <span>Interactive Practice &amp; Flashcards</span>
                 </div>
                 <p className="text-xs text-[#CBD5E1] leading-relaxed">
-                  Five brain-friendly games (Word Match, Word Scramble, Missing Word Story, Speed Spell, and Word Detective) challenge you in English first and reveal Sinhala meanings only after you answer.
+                  Quizzes, flashcards, and five vocabulary practice games (Word Match, Word Scramble, Missing Word Story, Speed Spell, and Word Detective) reinforce new English words naturally.
                 </p>
               </div>
             </div>
@@ -149,10 +149,18 @@ export const InfoPages: React.FC<InfoPagesProps> = ({
                 <span>4 Curated Story Categories</span>
               </div>
               <ul className="text-xs text-[#CBD5E1] space-y-1.5 leading-relaxed">
-                <li>· Folk Tales &amp; Parables (ජන කතා සහ උපමා කතා)</li>
-                <li>· Village &amp; Everyday Life (ගැමි ජීවිතය සහ එදිනෙදා කතා)</li>
-                <li>· Sri Lankan Nature &amp; Wildlife (ලංකාවේ සොබාදහම සහ සතුන්)</li>
-                <li>· Heritage, History &amp; Mystery (උරුමය, ඉතිහාසය සහ අභිරහස්)</li>
+                <li>
+                  · Folk Tales &amp; Parables (<span lang="si" className="font-sinhala">ජන කතා සහ උපමා කතා</span>)
+                </li>
+                <li>
+                  · Village &amp; Everyday Life (<span lang="si" className="font-sinhala">ගැමි ජීවිතය සහ එදිනෙදා කතා</span>)
+                </li>
+                <li>
+                  · Sri Lankan Nature &amp; Wildlife (<span lang="si" className="font-sinhala">ලංකාවේ සොබාදහම සහ සතුන්</span>)
+                </li>
+                <li>
+                  · Inspiring Lives (<span lang="si" className="font-sinhala">ලෝකය වෙනස් කළ අය</span>)
+                </li>
               </ul>
             </section>
           </div>

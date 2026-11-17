@@ -9,8 +9,8 @@ import { InfoPages } from './components/InfoPages';
 import { UserProgressProvider, useUserProgress } from './context/UserProgressContext';
 import { soundEffects } from './utils/audio';
 import {
-  BookOpen,
-  Gamepad2,
+  Home,
+  Sparkles,
   Star,
   BarChart3,
   Flame,
@@ -30,7 +30,7 @@ import {
 
 function AppShell() {
   const [route, setRoute] = useState<AppRoute>(() =>
-    parseLocationToRoute(window.location.pathname, window.location.search)
+    parseLocationToRoute(window.location.pathname)
   );
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
 
@@ -66,7 +66,7 @@ function AppShell() {
 
   useEffect(() => {
     const handlePopState = () => {
-      setRoute(parseLocationToRoute(window.location.pathname, window.location.search));
+      setRoute(parseLocationToRoute(window.location.pathname));
       setAccountMenuOpen(false);
       window.scrollTo({ top: 0, behavior: 'auto' });
     };
@@ -76,8 +76,8 @@ function AppShell() {
 
   const currentStory =
     route.view === 'reader'
-      ? STORIES.find((s) => s.id === route.storyId) || STORIES[0]
-      : STORIES[0];
+      ? STORIES.find((s) => s.id === route.storyId)
+      : undefined;
 
   useEffect(() => {
     syncPageSeo(route, route.view === 'reader' ? currentStory : undefined);
@@ -86,22 +86,14 @@ function AppShell() {
   const selectedCategoryId: StoryCategoryId | null =
     route.view === 'toc' ? route.categoryId : null;
 
+  const isOnHomePage = route.view === 'toc' && route.categoryId === null;
+
   const handleSelectCategory = (categoryId: StoryCategoryId | null) => {
     navigateTo({ view: 'toc', categoryId });
   };
 
-  const handleSelectStoryAndChapter = (storyId: string, chapterNumber: number) => {
-    navigateTo({ view: 'reader', storyId, chapterNumber });
-  };
-
-  const handleChapterChange = (newChapterNum: number) => {
-    if (route.view === 'reader') {
-      navigateTo({
-        view: 'reader',
-        storyId: route.storyId,
-        chapterNumber: newChapterNum,
-      });
-    }
+  const handleSelectStory = (storyId: string) => {
+    navigateTo({ view: 'reader', storyId });
   };
 
   const handleGoHome = () => {
@@ -109,12 +101,12 @@ function AppShell() {
     navigateTo({ view: 'toc', categoryId: null });
   };
 
-  const handleOpenGames = (gameId: ActiveGameId | null = null) => {
+  const handleOpenPractice = (gameId: ActiveGameId | null = null) => {
     soundEffects.playClick();
     navigateTo({ view: 'games', gameId });
   };
 
-  const handleOpenWordbook = () => {
+  const handleOpenMyWords = () => {
     soundEffects.playClick();
     navigateTo({ view: 'wordbook' });
   };
@@ -133,125 +125,79 @@ function AppShell() {
 
   return (
     <div className="min-h-screen midnight-indigo-backdrop text-[#F1F5F9] flex flex-col font-sans antialiased">
-      {/* Clean Three-Zone Midnight Glass Top Navigation */}
-      <header className="sticky top-0 z-40 bg-[rgba(8,13,28,0.88)] backdrop-blur-md border-b border-[rgba(165,180,252,0.14)]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3 lg:gap-6">
+      {/* Compact Responsive 3-Zone Top Navigation (No Category Links, 360px Safe) */}
+      <header className="sticky top-0 z-40 bg-[rgba(8,13,28,0.9)] backdrop-blur-md border-b border-[rgba(165,180,252,0.14)]">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
           {/* Zone 1: Brand Wordmark */}
           <button
             type="button"
             onClick={handleGoHome}
-            className="text-xl font-serif font-bold tracking-tight text-[#FFFFFF] whitespace-nowrap shrink-0 cursor-pointer hover:text-[#8FB4FF] transition-colors"
+            className="text-lg sm:text-xl font-serif font-bold tracking-tight text-[#FFFFFF] whitespace-nowrap shrink-0 cursor-pointer hover:text-[#8FB4FF] transition-colors min-h-[40px] flex items-center"
           >
             StoryGlow
           </button>
 
-          {/* Zone 2: Concise Single-Line Category, Games & Wordbook Links */}
-          <nav className="hidden md:flex items-center gap-3 lg:gap-5 text-xs lg:text-sm font-medium text-[#CBD5E1]">
+          {/* Zone 2: Clean Desktop Navigation (Practice & My Words only; categories live in library) */}
+          <nav
+            aria-label="Primary navigation"
+            className="hidden md:flex items-center gap-6 text-sm font-medium text-[#CBD5E1]"
+          >
             <button
               type="button"
-              onClick={() => {
-                soundEffects.playClick();
-                handleSelectCategory('folktales');
-              }}
-              className={`whitespace-nowrap shrink-0 cursor-pointer transition-colors hover:text-[#FFFFFF] ${
-                route.view === 'toc' && selectedCategoryId === 'folktales'
-                  ? 'text-[#8CA8FF] font-semibold underline decoration-[#5B6CFF] underline-offset-4'
-                  : 'text-[#CBD5E1]'
-              }`}
-            >
-              ජන කතා
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                soundEffects.playClick();
-                handleSelectCategory('village');
-              }}
-              className={`whitespace-nowrap shrink-0 cursor-pointer transition-colors hover:text-[#FFFFFF] ${
-                route.view === 'toc' && selectedCategoryId === 'village'
-                  ? 'text-[#8CA8FF] font-semibold underline decoration-[#5B6CFF] underline-offset-4'
-                  : 'text-[#CBD5E1]'
-              }`}
-            >
-              ගැමි ජීවිතය
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                soundEffects.playClick();
-                handleSelectCategory('nature');
-              }}
-              className={`whitespace-nowrap shrink-0 cursor-pointer transition-colors hover:text-[#FFFFFF] ${
-                route.view === 'toc' && selectedCategoryId === 'nature'
-                  ? 'text-[#8CA8FF] font-semibold underline decoration-[#5B6CFF] underline-offset-4'
-                  : 'text-[#CBD5E1]'
-              }`}
-            >
-              සොබාදහම
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                soundEffects.playClick();
-                handleSelectCategory('heritage');
-              }}
-              className={`whitespace-nowrap shrink-0 cursor-pointer transition-colors hover:text-[#FFFFFF] ${
-                route.view === 'toc' && selectedCategoryId === 'heritage'
-                  ? 'text-[#8CA8FF] font-semibold underline decoration-[#5B6CFF] underline-offset-4'
-                  : 'text-[#CBD5E1]'
-              }`}
-            >
-              උරුමය
-            </button>
-            <button
-              type="button"
-              onClick={() => handleOpenGames(null)}
-              className={`inline-flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer transition-colors hover:text-[#FFFFFF] ${
+              onClick={() => handleOpenPractice(null)}
+              className={`inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors hover:text-[#FFFFFF] min-h-[40px] ${
                 route.view === 'games'
                   ? 'text-[#8CA8FF] font-semibold underline decoration-[#5B6CFF] underline-offset-4'
                   : 'text-[#CBD5E1]'
               }`}
             >
-              <Gamepad2 className="w-4 h-4 text-[#8CA8FF]" />
-              <span>Games</span>
+              <Sparkles className="w-4 h-4 text-[#8CA8FF]" />
+              <span>Practice</span>
+              <span lang="si" className="text-xs font-sinhala opacity-90">
+                / පුහුණුව
+              </span>
             </button>
+
             <button
               type="button"
-              onClick={handleOpenWordbook}
-              className={`inline-flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer transition-colors hover:text-[#FFFFFF] ${
+              onClick={handleOpenMyWords}
+              className={`inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors hover:text-[#FFFFFF] min-h-[40px] ${
                 route.view === 'wordbook'
                   ? 'text-[#FCD34D] font-semibold underline decoration-[#FBBF24] underline-offset-4'
                   : 'text-[#CBD5E1]'
               }`}
             >
               <Star className="w-3.5 h-3.5 text-[#FBBF24]" />
-              <span>Wordbook{savedWords.length > 0 ? ` (${savedWords.length})` : ''}</span>
+              <span>
+                My Words{savedWords.length > 0 ? ` (${savedWords.length})` : ''}
+              </span>
             </button>
           </nav>
 
-          {/* Zone 3: Mobile Shortcuts + Google Account / Contents CTA */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Zone 3: Mobile Shortcuts + Account + Context-Aware Home Button */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               type="button"
-              onClick={() => handleOpenGames(null)}
-              className={`md:hidden inline-flex items-center gap-1 text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
-                route.view === 'games' ? 'text-[#8CA8FF] underline underline-offset-4' : 'text-[#CBD5E1]'
+              onClick={() => handleOpenPractice(null)}
+              className={`md:hidden inline-flex items-center gap-1 px-2 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors min-h-[40px] ${
+                route.view === 'games' ? 'text-[#8CA8FF] bg-[#152042]' : 'text-[#CBD5E1]'
               }`}
+              title="Practice / පුහුණුව"
             >
-              <Gamepad2 className="w-3.5 h-3.5 text-[#8CA8FF]" />
-              <span>Games</span>
+              <Sparkles className="w-3.5 h-3.5 text-[#8CA8FF]" />
+              <span>Practice</span>
             </button>
 
             <button
               type="button"
-              onClick={handleOpenWordbook}
-              className={`md:hidden inline-flex items-center gap-1 text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
-                route.view === 'wordbook' ? 'text-[#FCD34D] underline underline-offset-4' : 'text-[#CBD5E1]'
+              onClick={handleOpenMyWords}
+              className={`md:hidden inline-flex items-center gap-1 px-2 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors min-h-[40px] ${
+                route.view === 'wordbook' ? 'text-[#FCD34D] bg-[#152042]' : 'text-[#CBD5E1]'
               }`}
-              title="My Wordbook"
+              title="My Words / මගේ වචන"
             >
               <Star className="w-3.5 h-3.5 text-[#FBBF24]" />
-              {savedWords.length > 0 && <span>{savedWords.length}</span>}
+              <span>Words{savedWords.length > 0 ? ` (${savedWords.length})` : ''}</span>
             </button>
 
             {/* Google Account / Cloud Sync Menu */}
@@ -263,7 +209,7 @@ function AppShell() {
                     soundEffects.playClick();
                     setAccountMenuOpen((prev) => !prev);
                   }}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[#152042] hover:bg-[#1C2B57] border border-[rgba(165,180,252,0.25)] text-xs font-semibold text-[#FFFFFF] cursor-pointer whitespace-nowrap"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[#152042] hover:bg-[#1C2B57] border border-[rgba(165,180,252,0.25)] text-xs font-semibold text-[#FFFFFF] cursor-pointer whitespace-nowrap min-h-[38px]"
                 >
                   {user.photoURL ? (
                     <img
@@ -290,11 +236,13 @@ function AppShell() {
                     soundEffects.playClick();
                     void signInWithGoogle();
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#152042] hover:bg-[#1C2B57] border border-[rgba(165,180,252,0.25)] text-xs font-semibold text-[#E2E8F0] hover:text-[#FFFFFF] disabled:opacity-60 transition-colors cursor-pointer whitespace-nowrap"
+                  className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#152042] hover:bg-[#1C2B57] border border-[rgba(165,180,252,0.25)] text-xs font-semibold text-[#E2E8F0] hover:text-[#FFFFFF] disabled:opacity-60 transition-colors cursor-pointer whitespace-nowrap min-h-[38px]"
                   title="Sign in with Google to save progress across devices"
                 >
                   <LogIn className="w-3.5 h-3.5 text-[#8CA8FF]" />
-                  <span>{authBusy ? 'Signing in...' : 'Sign In'}</span>
+                  <span className="hidden xs:inline sm:inline">
+                    {authBusy ? 'Signing in...' : 'Sign In'}
+                  </span>
                 </button>
               )}
 
@@ -313,20 +261,20 @@ function AppShell() {
 
                   <button
                     type="button"
-                    onClick={handleOpenWordbook}
-                    className="w-full text-left px-3 py-2 rounded-xl hover:bg-[#18244A] text-[#E2E8F0] flex items-center gap-2 cursor-pointer"
+                    onClick={handleOpenMyWords}
+                    className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-[#18244A] text-[#E2E8F0] flex items-center gap-2 cursor-pointer"
                   >
                     <Star className="w-3.5 h-3.5 text-[#FBBF24]" />
-                    <span>My Wordbook ({savedWords.length})</span>
+                    <span>My Words ({savedWords.length})</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={handleOpenAnalytics}
-                    className="w-full text-left px-3 py-2 rounded-xl hover:bg-[#18244A] text-[#E2E8F0] flex items-center gap-2 cursor-pointer"
+                    className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-[#18244A] text-[#E2E8F0] flex items-center gap-2 cursor-pointer"
                   >
                     <BarChart3 className="w-3.5 h-3.5 text-[#8CA8FF]" />
-                    <span>Visitor & Story Stats</span>
+                    <span>Visitor &amp; Story Stats</span>
                   </button>
 
                   <button
@@ -336,7 +284,7 @@ function AppShell() {
                       setAccountMenuOpen(false);
                       void signOutUser();
                     }}
-                    className="w-full text-left px-3 py-2 rounded-xl hover:bg-[rgba(76,5,25,0.55)] text-[#FDA4AF] flex items-center gap-2 cursor-pointer mt-1 border-t border-[rgba(165,180,252,0.12)]"
+                    className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-[rgba(76,5,25,0.55)] text-[#FDA4AF] flex items-center gap-2 cursor-pointer mt-1 border-t border-[rgba(165,180,252,0.12)]"
                   >
                     <LogOut className="w-3.5 h-3.5" />
                     <span>Sign Out</span>
@@ -345,15 +293,22 @@ function AppShell() {
               )}
             </div>
 
-            <button
-              type="button"
-              onClick={handleGoHome}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-indigo-cta text-[#FFFFFF] text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer"
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">පටුන (Contents)</span>
-              <span className="sm:hidden">පටුන</span>
-            </button>
+            {/* Hide Home CTA when already on the Home Library page */}
+            {!isOnHomePage && (
+              <button
+                type="button"
+                onClick={handleGoHome}
+                className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-2 rounded-full bg-indigo-cta text-[#FFFFFF] text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer min-h-[38px]"
+              >
+                <Home className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">
+                  Home / <span lang="si" className="font-sinhala">මුල් පිටුව</span>
+                </span>
+                <span lang="si" className="sm:hidden font-sinhala">
+                  මුල් පිටුව
+                </span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -376,12 +331,12 @@ function AppShell() {
         ) : route.view === 'wordbook' ? (
           <WordbookPage
             onBackToStories={handleGoHome}
-            onSelectStory={(storyId) => handleSelectStoryAndChapter(storyId, 1)}
+            onSelectStory={handleSelectStory}
           />
         ) : route.view === 'analytics' ? (
           <AnalyticsPage
             onBackHome={handleGoHome}
-            onSelectStory={(storyId) => handleSelectStoryAndChapter(storyId, 1)}
+            onSelectStory={handleSelectStory}
           />
         ) : route.view === 'info' ? (
           <InfoPages
@@ -394,28 +349,26 @@ function AppShell() {
             stories={STORIES}
             selectedCategoryId={selectedCategoryId}
             onSelectCategory={handleSelectCategory}
-            onSelectStoryAndChapter={handleSelectStoryAndChapter}
-            onOpenWordbook={handleOpenWordbook}
+            onSelectStory={handleSelectStory}
+            onOpenWordbook={handleOpenMyWords}
           />
         ) : (
           <BookContainer
             story={currentStory}
-            currentChapterNumber={route.chapterNumber}
-            onChapterChange={handleChapterChange}
             onBackToStories={handleGoHome}
           />
         )}
       </main>
 
-      {/* Editorial & Legal Launch Footer */}
+      {/* Editorial & Legal Footer */}
       <footer className="py-7 px-4 bg-[rgba(7,11,24,0.88)] border-t border-[rgba(165,180,252,0.12)] text-xs text-[#94A3B8]">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-center sm:text-left">
-            <p className="text-[#CBD5E1] font-medium font-sinhala">
+            <p className="text-[#CBD5E1] font-medium font-sinhala" lang="si">
               StoryGlow · ශ්‍රී ලාංකික පාඨකයන් සඳහා සරල ඉංග්‍රීසි කතා පුස්තකාලය
             </p>
             <p className="text-[11px] text-[#64748B] mt-1">
-              © {new Date().getFullYear()} StoryGlow. Free bilingual reading & vocabulary games.
+              © {new Date().getFullYear()} StoryGlow. Free bilingual reading, quizzes &amp; vocabulary practice.
             </p>
           </div>
 
@@ -426,30 +379,32 @@ function AppShell() {
             <button
               type="button"
               onClick={handleGoHome}
-              className="hover:text-[#FFFFFF] transition-colors cursor-pointer"
+              className="hover:text-[#FFFFFF] transition-colors cursor-pointer py-1"
             >
-              Stories
+              Home
             </button>
             <button
               type="button"
-              onClick={() => handleOpenGames(null)}
-              className="hover:text-[#FFFFFF] transition-colors cursor-pointer"
+              onClick={() => handleOpenPractice(null)}
+              className={`hover:text-[#FFFFFF] transition-colors cursor-pointer py-1 ${
+                route.view === 'games' ? 'text-[#8CA8FF] font-semibold' : ''
+              }`}
             >
-              Games
+              Practice
             </button>
             <button
               type="button"
-              onClick={handleOpenWordbook}
-              className={`hover:text-[#FFFFFF] transition-colors cursor-pointer ${
+              onClick={handleOpenMyWords}
+              className={`hover:text-[#FFFFFF] transition-colors cursor-pointer py-1 ${
                 route.view === 'wordbook' ? 'text-[#FCD34D] font-semibold' : ''
               }`}
             >
-              Wordbook
+              My Words
             </button>
             <button
               type="button"
               onClick={handleOpenAnalytics}
-              className={`hover:text-[#FFFFFF] transition-colors cursor-pointer ${
+              className={`hover:text-[#FFFFFF] transition-colors cursor-pointer py-1 ${
                 route.view === 'analytics' ? 'text-[#8CA8FF] font-semibold' : ''
               }`}
             >
@@ -458,7 +413,7 @@ function AppShell() {
             <button
               type="button"
               onClick={() => handleSelectInfoPage('about')}
-              className={`hover:text-[#FFFFFF] transition-colors cursor-pointer ${
+              className={`hover:text-[#FFFFFF] transition-colors cursor-pointer py-1 ${
                 route.view === 'info' && route.page === 'about' ? 'text-[#8CA8FF] font-semibold' : ''
               }`}
             >
@@ -467,7 +422,7 @@ function AppShell() {
             <button
               type="button"
               onClick={() => handleSelectInfoPage('contact')}
-              className={`hover:text-[#FFFFFF] transition-colors cursor-pointer ${
+              className={`hover:text-[#FFFFFF] transition-colors cursor-pointer py-1 ${
                 route.view === 'info' && route.page === 'contact' ? 'text-[#8CA8FF] font-semibold' : ''
               }`}
             >
@@ -476,7 +431,7 @@ function AppShell() {
             <button
               type="button"
               onClick={() => handleSelectInfoPage('privacy-policy')}
-              className={`hover:text-[#FFFFFF] transition-colors cursor-pointer ${
+              className={`hover:text-[#FFFFFF] transition-colors cursor-pointer py-1 ${
                 route.view === 'info' && route.page === 'privacy-policy'
                   ? 'text-[#8CA8FF] font-semibold'
                   : ''
@@ -487,7 +442,7 @@ function AppShell() {
             <button
               type="button"
               onClick={() => handleSelectInfoPage('terms')}
-              className={`hover:text-[#FFFFFF] transition-colors cursor-pointer ${
+              className={`hover:text-[#FFFFFF] transition-colors cursor-pointer py-1 ${
                 route.view === 'info' && route.page === 'terms' ? 'text-[#8CA8FF] font-semibold' : ''
               }`}
             >
@@ -507,4 +462,3 @@ export default function App() {
     </UserProgressProvider>
   );
 }
-
