@@ -20,7 +20,6 @@ import {
   Award,
   CheckCircle2,
   X,
-  Languages,
   Share2,
   Check,
   Star,
@@ -32,6 +31,8 @@ import {
   Heart,
   Clock,
   FolderOpen,
+  RotateCcw,
+  AlertCircle,
 } from 'lucide-react';
 import { speechNarrator, soundEffects } from '../utils/audio';
 import { VocabularyModal } from './VocabularyModal';
@@ -48,16 +49,22 @@ export const BookContainer: React.FC<BookContainerProps> = ({
   story,
   onBackToStories,
 }) => {
-  const [showSinhala, setShowSinhala] = useState<boolean>(true);
   const [activeSentenceIndex, setActiveSentenceIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [speechRate, setSpeechRate] = useState<number>(0.85);
   const [isVoiceActive, setIsVoiceActive] = useState<boolean>(false);
   const [inspectingWord, setInspectingWord] = useState<VocabularyWord | null>(null);
+  const [hoveredWord, setHoveredWord] = useState<{
+    vocab: VocabularyWord;
+    top: number;
+    left: number;
+    placeBelow: boolean;
+  } | null>(null);
   const [isVocabModalOpen, setIsVocabModalOpen] = useState<boolean>(false);
   const [isQuizModalOpen, setIsQuizModalOpen] = useState<boolean>(false);
   const [speakingSentence, setSpeakingSentence] = useState<StorySentence | null>(null);
   const [linkCopied, setLinkCopied] = useState<boolean>(false);
+  const [inlineQuizAnswers, setInlineQuizAnswers] = useState<Record<number, number>>({});
 
   const {
     readerTheme,
@@ -67,6 +74,7 @@ export const BookContainer: React.FC<BookContainerProps> = ({
     toggleSaveWord,
     isWordSaved,
     markStoryComplete,
+    recordQuizScore,
     completedStoryIds,
     toggleFavoriteStory,
     isStoryFavorited,
@@ -80,6 +88,16 @@ export const BookContainer: React.FC<BookContainerProps> = ({
     () => (story ? extractStorySentences(story) : []),
     [story]
   );
+
+  const groupedParagraphs = useMemo(() => {
+    const map = new Map<number, Array<{ sentence: StorySentence; globalIndex: number }>>();
+    sentences.forEach((sentence, globalIndex) => {
+      const existing = map.get(sentence.paragraphIndex) || [];
+      existing.push({ sentence, globalIndex });
+      map.set(sentence.paragraphIndex, existing);
+    });
+    return Array.from(map.values());
+  }, [sentences]);
 
   const visibleVocabulary = useMemo(
     () => (story ? getStoryVocabWords(story) : []),
@@ -109,6 +127,8 @@ export const BookContainer: React.FC<BookContainerProps> = ({
     setActiveSentenceIndex(0);
     setIsVoiceActive(false);
     setInspectingWord(null);
+    setHoveredWord(null);
+    setInlineQuizAnswers({});
     speechNarrator.stop();
   }, [story?.id]);
 
@@ -125,6 +145,13 @@ export const BookContainer: React.FC<BookContainerProps> = ({
       speechNarrator.stop();
     };
   }, []);
+
+  useEffect(() => {
+    if (!hoveredWord) return;
+    const hideHover = () => setHoveredWord(null);
+    window.addEventListener('scroll', hideHover, { passive: true });
+    return () => window.removeEventListener('scroll', hideHover);
+  }, [hoveredWord]);
 
   if (!story) {
     return (
@@ -158,7 +185,6 @@ export const BookContainer: React.FC<BookContainerProps> = ({
   const isStoryCompleted = completedStoryIds.includes(story.id);
   const isFavorited = isStoryFavorited(story.id);
   const levelInfo = LEVEL_META[story.level] || LEVEL_META.Beginner;
-  const hasSinhalaParagraphs = Boolean(story.paragraphsSi && story.paragraphsSi.length > 0);
 
   const playSentence = (index: number, autoContinue: boolean) => {
     clearPendingTimer();
@@ -222,14 +248,52 @@ export const BookContainer: React.FC<BookContainerProps> = ({
   const handleWordClick = (vocab?: VocabularyWord) => {
     if (vocab) {
       soundEffects.playWordTap();
+      setHoveredWord(null);
       setInspectingWord(vocab);
       speechNarrator.speakWord(vocab.word);
     }
   };
 
+  const handleWordHover = (vocab: VocabularyWord, el: HTMLElement) => {
+    const rect = el.getBoundingClientRect();
+    const halfWidth = 115;
+    const clampedLeft = Math.min(
+      Math.max(rect.left + rect.width / 2, halfWidth + 12),
+      window.innerWidth - halfWidth - 12
+    );
+    const placeBelow = rect.top < 96;
+    setHoveredWord({
+      vocab,
+      top: placeBelow ? rect.bottom + 8 : rect.top - 8,
+      left: clampedLeft,
+      placeBelow,
+    });
+  };
+
   const toggleSpeed = () => {
     soundEffects.playClick();
     setSpeechRate((prev) => (prev <= 0.85 ? 1.0 : 0.8));
+  };
+
+  const handleInlineQuizSelect = (qIdx: number, optIdx: number) => {
+    if (inlineQuizAnswers[qIdx] !== undefined || !story.quiz[qIdx]) return;
+    const isCorrect = optIdx === story.quiz[qIdx].correctIndex;
+    if (isCorrect) {
+      soundEffects.playCompletionChime();
+    } else {
+      soundEffects.playClick();
+    }
+    const nextAnswers = { ...inlineQuizAnswers, [qIdx]: optIdx };
+    setInlineQuizAnswers(nextAnswers);
+
+    if (Object.keys(nextAnswers).length === story.quiz.length) {
+      const correctTotal = story.quiz.reduce(
+        (sum, q, idx) => sum + (nextAnswers[idx] === q.correctIndex ? 1 : 0),
+        0
+      );
+      recordQuizScore(story.id, correctTotal, story.quiz.length);
+      markStoryComplete(story.id);
+    }
   };
 
   const handleSpeakMoral = () => {
@@ -292,8 +356,8 @@ export const BookContainer: React.FC<BookContainerProps> = ({
       subtitle: string;
       meta: string;
       accent: string;
-      cardIdle: string;
-      cardActive: string;
+      sentenceIdle: string;
+      sentenceActive: string;
       enText: string;
       siText: string;
       vocabWord: string;
@@ -316,10 +380,8 @@ export const BookContainer: React.FC<BookContainerProps> = ({
       subtitle: 'text-[#CBD5E1]',
       meta: 'text-[#94A3B8]',
       accent: 'text-[#8CA8FF]',
-      cardIdle:
-        'bg-[rgba(18,27,54,0.85)] hover:bg-[#162142] border-[rgba(165,180,252,0.12)]',
-      cardActive:
-        'bg-[#17244A] border-[#6C7BFF] shadow-[0_0_24px_-6px_rgba(99,102,241,0.35)]',
+      sentenceIdle: 'hover:bg-[rgba(99,102,241,0.1)]',
+      sentenceActive: 'bg-[rgba(99,102,241,0.24)] text-[#FFFFFF] px-1 py-0.5',
       enText: 'text-[#F1F5F9]',
       siText: 'text-[#CBD5E1]',
       vocabWord: 'text-[#9CB8FF] decoration-[#657BFF] hover:text-[#FFFFFF]',
@@ -345,9 +407,8 @@ export const BookContainer: React.FC<BookContainerProps> = ({
       subtitle: 'text-[#334155]',
       meta: 'text-[#475569]',
       accent: 'text-[#4338CA]',
-      cardIdle: 'bg-[#FFFFFF] hover:bg-[#F1F5F9] border-[#E2E8F0]',
-      cardActive:
-        'bg-[#EEF2FF] border-[#4F46E5] shadow-[0_8px_24px_-8px_rgba(79,70,229,0.25)]',
+      sentenceIdle: 'hover:bg-[#E0E7FF]',
+      sentenceActive: 'bg-[#E0E7FF] text-[#1E1B4B] px-1 py-0.5',
       enText: 'text-[#0F172A]',
       siText: 'text-[#334155]',
       vocabWord: 'text-[#3730A3] decoration-[#4F46E5] hover:text-[#1E1B4B]',
@@ -370,9 +431,8 @@ export const BookContainer: React.FC<BookContainerProps> = ({
       subtitle: 'text-[#4A3525]',
       meta: 'text-[#6E533E]',
       accent: 'text-[#8B4513]',
-      cardIdle: 'bg-[#FAF3E3] hover:bg-[#F2E6CC] border-[#DFCFAF]',
-      cardActive:
-        'bg-[#EFE1C6] border-[#9A5B25] shadow-[0_8px_24px_-8px_rgba(139,69,19,0.2)]',
+      sentenceIdle: 'hover:bg-[#EFE1C6]',
+      sentenceActive: 'bg-[#E8D5B2] text-[#24170D] px-1 py-0.5',
       enText: 'text-[#24170D]',
       siText: 'text-[#4A3525]',
       vocabWord: 'text-[#7C2D12] decoration-[#B45309] hover:text-[#451A03]',
@@ -454,23 +514,18 @@ export const BookContainer: React.FC<BookContainerProps> = ({
 
         {/* Right Controls */}
         <div className="flex flex-wrap items-center gap-2">
-          {hasSinhalaParagraphs && (
+          {sentences.length > 0 && (
             <button
               type="button"
               onClick={() => {
                 soundEffects.playClick();
-                setShowSinhala((prev) => !prev);
+                setSpeakingSentence(sentences[activeSentenceIndex] || sentences[0]);
               }}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap min-h-[40px] ${
-                showSinhala
-                  ? 'bg-[#172347] border-[rgba(108,123,255,0.5)] text-[#AFC4FF]'
-                  : 'bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] border-[rgba(165,180,252,0.18)] text-[#CBD5E1]'
-              }`}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[rgba(17,25,51,0.92)] hover:bg-[#172245] text-[#E2E8F0] border border-[rgba(165,180,252,0.22)] text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap min-h-[40px]"
+              title="Practice speaking the highlighted sentence"
             >
-              <Languages className="w-3.5 h-3.5 text-[#8CA8FF]" />
-              <span lang="si" className="font-sinhala">
-                {showSinhala ? 'සිංහල: පෙනේ' : 'සිංහල: සැඟවී'}
-              </span>
+              <Mic className="w-3.5 h-3.5 text-[#8CA8FF]" />
+              <span>Speak Practice</span>
             </button>
           )}
 
@@ -655,78 +710,64 @@ export const BookContainer: React.FC<BookContainerProps> = ({
           </div>
         </header>
 
-        {/* Interactive Clickable Sentences Body */}
-        <div className="space-y-3">
-          {sentences.map((sentence, sIdx) => {
-            const isActive = activeSentenceIndex === sIdx;
+        {/* Continuous Flowing English Story Paragraphs (Hover/Tap underlined words for Sinhala meanings) */}
+        <div className="space-y-5">
+          {groupedParagraphs.map((paraSentences, pIdx) => (
+            <p
+              key={pIdx}
+              className={`font-serif leading-[1.85] tracking-[0.005em] ${activeEnFont} ${t.enText}`}
+            >
+              {paraSentences.map(({ sentence, globalIndex }, sLocalIdx) => {
+                const isActive = (isPlaying || isVoiceActive) && activeSentenceIndex === globalIndex;
 
-            return (
-              <div
-                key={sentence.id}
-                onClick={() => {
-                  soundEffects.playClick();
-                  playSentence(sIdx, isPlayingRef.current);
-                }}
-                className={`p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer ${
-                  isActive ? t.cardActive : t.cardIdle
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2.5 sm:gap-3">
-                  <p
-                    className={`flex-1 font-serif leading-relaxed tracking-[0.005em] ${activeEnFont} ${t.enText}`}
-                  >
-                    {sentence.words.map((w, wIdx) => {
-                      const hasVocab = !!w.vocab;
-                      return (
-                        <span
-                          key={wIdx}
-                          onClick={(e) => {
-                            if (hasVocab) {
-                              e.stopPropagation();
-                              handleWordClick(w.vocab);
-                            }
-                          }}
-                          className={`inline-block mr-1.5 transition-colors ${
-                            hasVocab
-                              ? `font-medium underline decoration-2 underline-offset-4 cursor-pointer ${t.vocabWord}`
-                              : ''
-                          }`}
-                          title={
-                            hasVocab ? `සිංහල තේරුම: ${w.vocab?.sinhalaMeaning}` : undefined
-                          }
-                        >
-                          {w.displayWord}
-                        </span>
-                      );
-                    })}
-                  </p>
+                return (
+                  <React.Fragment key={sentence.id}>
+                    <span
+                      onClick={() => {
+                        soundEffects.playClick();
+                        playSentence(globalIndex, isPlayingRef.current);
+                      }}
+                      className={`rounded transition-colors cursor-pointer ${
+                        isActive ? t.sentenceActive : t.sentenceIdle
+                      }`}
+                    >
+                      {sentence.words.map((w, wIdx) => {
+                        const hasVocab = !!w.vocab;
+                        const spacer = wIdx < sentence.words.length - 1 ? ' ' : '';
 
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      soundEffects.playClick();
-                      setSpeakingSentence(sentence);
-                    }}
-                    className={`inline-flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs font-semibold shrink-0 transition-colors cursor-pointer min-h-[36px] ${t.speakBtn}`}
-                    title="Practice speaking this sentence"
-                  >
-                    <Mic className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Speak</span>
-                  </button>
-                </div>
+                        if (!hasVocab) {
+                          return (
+                            <React.Fragment key={wIdx}>
+                              {w.displayWord}
+                              {spacer}
+                            </React.Fragment>
+                          );
+                        }
 
-                {showSinhala && sentence.sinhalaTranslation && (
-                  <p
-                    lang="si"
-                    className={`font-sinhala mt-2.5 leading-relaxed tracking-[0.01em] ${activeSiFont} ${t.siText}`}
-                  >
-                    {sentence.sinhalaTranslation}
-                  </p>
-                )}
-              </div>
-            );
-          })}
+                        return (
+                          <React.Fragment key={wIdx}>
+                            <span
+                              onMouseEnter={(e) => handleWordHover(w.vocab!, e.currentTarget)}
+                              onMouseLeave={() => setHoveredWord(null)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleWordClick(w.vocab);
+                              }}
+                              className={`font-medium underline decoration-2 underline-offset-4 cursor-pointer transition-colors ${t.vocabWord}`}
+                            >
+                              {w.displayWord}
+                            </span>
+                            {spacer}
+                          </React.Fragment>
+                        );
+                      })}
+                    </span>
+                    {sLocalIdx < paraSentences.length - 1 ? ' ' : ''}
+                  </React.Fragment>
+                );
+              })}
+            </p>
+          ))}
         </div>
 
         {/* Optional Story Ending Moral Card */}
@@ -828,6 +869,182 @@ export const BookContainer: React.FC<BookContainerProps> = ({
             </div>
           </div>
         )}
+
+        {/* Inline Story Comprehension Quiz Section (ප්‍රශ්නාවලිය) */}
+        {story.quiz.length > 0 && (() => {
+          const answeredCount = Object.keys(inlineQuizAnswers).length;
+          const correctCount = story.quiz.reduce(
+            (sum, q, idx) => sum + (inlineQuizAnswers[idx] === q.correctIndex ? 1 : 0),
+            0
+          );
+          const allAnswered = answeredCount === story.quiz.length;
+          const optionBtnIdle =
+            readerTheme === 'night'
+              ? 'bg-[#0F172E] hover:bg-[#19264D] border-[rgba(165,180,252,0.18)] text-[#E2E8F0]'
+              : readerTheme === 'light'
+              ? 'bg-[#F8FAFC] hover:bg-[#EEF2FF] border-[#CBD5E1] text-[#0F172A]'
+              : 'bg-[#FAF3E3] hover:bg-[#EFE1C6] border-[#D6C3A0] text-[#2C1E12]';
+
+          return (
+            <section
+              aria-label="Story Comprehension Questions"
+              className={`mt-8 pt-6 border-t ${t.borderSubtle}`}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div>
+                  <h2 className={`text-base sm:text-lg font-serif font-bold flex items-center gap-2 ${t.title}`}>
+                    <Award className={`w-4 h-4 ${t.accent}`} />
+                    <span>Comprehension Quiz ·</span>
+                    <span lang="si" className="font-sinhala">
+                      ප්‍රශ්න ({story.quiz.length})
+                    </span>
+                  </h2>
+                  <p lang="si" className={`text-xs font-sinhala mt-0.5 ${t.meta}`}>
+                    කතාව කියවූ පසු පහත ප්‍රශ්නවලට නිවැරදි පිළිතුර තෝරන්න
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-bold tabular-nums px-3 py-1 rounded-full ${t.speakBtn}`}>
+                    {correctCount} / {story.quiz.length} Correct
+                  </span>
+                  {answeredCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundEffects.playClick();
+                        setInlineQuizAnswers({});
+                      }}
+                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer ${t.speakBtn}`}
+                      title="Reset quiz answers"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Reset</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {story.quiz.map((q, qIdx) => {
+                  const chosenIdx = inlineQuizAnswers[qIdx];
+                  const isAnswered = chosenIdx !== undefined;
+                  const isCorrect = isAnswered && chosenIdx === q.correctIndex;
+
+                  return (
+                    <div
+                      key={qIdx}
+                      className={`p-4 sm:p-5 rounded-2xl border transition-colors ${t.vocabBox}`}
+                    >
+                      <p className={`font-serif font-semibold text-sm sm:text-base mb-3 ${t.title}`}>
+                        <span className={`font-mono text-xs mr-2 ${t.accent}`}>
+                          0{qIdx + 1}.
+                        </span>
+                        {q.question}
+                      </p>
+
+                      <div className="grid grid-cols-1 gap-2">
+                        {q.options.map((opt, optIdx) => {
+                          const isSelected = chosenIdx === optIdx;
+                          const isRightOpt = optIdx === q.correctIndex;
+
+                          let optStyle = optionBtnIdle;
+                          if (isAnswered) {
+                            if (isRightOpt) {
+                              optStyle =
+                                readerTheme === 'night'
+                                  ? 'bg-[rgba(2,44,34,0.85)] border-[#34D399] text-[#D1FAE5] font-semibold'
+                                  : 'bg-[#ECFDF5] border-[#10B981] text-[#065F46] font-semibold';
+                            } else if (isSelected && !isRightOpt) {
+                              optStyle =
+                                readerTheme === 'night'
+                                  ? 'bg-[rgba(76,5,25,0.85)] border-[#FB7185] text-[#FFE4E6]'
+                                  : 'bg-[#FFF1F2] border-[#F43F5E] text-[#9F1239]';
+                            } else {
+                              optStyle = `${optionBtnIdle} opacity-60`;
+                            }
+                          }
+
+                          return (
+                            <button
+                              key={optIdx}
+                              type="button"
+                              disabled={isAnswered}
+                              onClick={() => handleInlineQuizSelect(qIdx, optIdx)}
+                              className={`w-full text-left px-3.5 py-2.5 rounded-xl border text-xs sm:text-sm transition-colors flex items-center justify-between gap-2 cursor-pointer disabled:cursor-default min-h-[42px] ${optStyle}`}
+                            >
+                              <span>
+                                <strong className="font-mono mr-2">
+                                  {String.fromCharCode(65 + optIdx)}.
+                                </strong>
+                                {opt}
+                              </span>
+                              {isAnswered && isRightOpt && (
+                                <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0" />
+                              )}
+                              {isAnswered && isSelected && !isRightOpt && (
+                                <AlertCircle className="w-4 h-4 text-[#FB7185] shrink-0" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {isAnswered && (
+                        <div
+                          className={`mt-3 p-3 rounded-xl border text-xs leading-relaxed ${
+                            isCorrect
+                              ? readerTheme === 'night'
+                                ? 'bg-[rgba(2,44,34,0.65)] border-[rgba(52,211,153,0.4)] text-[#D1FAE5]'
+                                : 'bg-[#ECFDF5] border-[#A7F3D0] text-[#065F46]'
+                              : readerTheme === 'night'
+                              ? 'bg-[rgba(76,5,25,0.65)] border-[rgba(251,113,133,0.4)] text-[#FFE4E6]'
+                              : 'bg-[#FFF1F2] border-[#FECDD3] text-[#9F1239]'
+                          }`}
+                        >
+                          <p className="font-bold mb-0.5">
+                            {isCorrect ? '✔ නිවැරදි පිළිතුරක්! (Correct!)' : '✖ වැරදියි (Incorrect)'}
+                          </p>
+                          <p lang="si" className="font-sinhala">
+                            {q.explanation}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {allAnswered && (
+                <div
+                  className={`mt-4 p-4 rounded-2xl border flex flex-wrap items-center justify-between gap-3 ${
+                    readerTheme === 'night'
+                      ? 'bg-[rgba(2,44,34,0.65)] border-[rgba(52,211,153,0.45)] text-[#D1FAE5]'
+                      : 'bg-[#ECFDF5] border-[#6EE7B7] text-[#065F46]'
+                  }`}
+                >
+                  <p lang="si" className="text-xs sm:text-sm font-sinhala font-bold">
+                    විශිෂ්ටයි! ඔබ ප්‍රශ්න {story.quiz.length}න් {correctCount}කට නිවැරදි පිළිතුරු ලබා දුන්නා (
+                    {Math.round((correctCount / story.quiz.length) * 100)}%).
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundEffects.playClick();
+                      setInlineQuizAnswers({});
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-indigo-cta text-[#FFFFFF] text-xs font-bold cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span lang="si" className="font-sinhala">
+                      නැවත උත්සාහ කරන්න
+                    </span>
+                  </button>
+                </div>
+              )}
+            </section>
+          );
+        })()}
 
         {/* Bottom Completion & Navigation Row */}
         <div
@@ -937,6 +1154,26 @@ export const BookContainer: React.FC<BookContainerProps> = ({
               {speechRate <= 0.85 ? 'සෙමින්' : 'සාමාන්‍ය'}
             </span>
           </button>
+        </div>
+      )}
+
+      {/* Hover Tooltip Showing Sinhala Meaning When Mouse Moves Over Underlined Words */}
+      {hoveredWord && (
+        <div
+          role="tooltip"
+          style={{
+            top: `${hoveredWord.top}px`,
+            left: `${hoveredWord.left}px`,
+            transform: hoveredWord.placeBelow ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
+          }}
+          className="fixed z-50 pointer-events-none max-w-[250px] px-3.5 py-2 rounded-xl bg-[#0F172E] border border-[rgba(129,140,248,0.65)] shadow-[0_12px_30px_rgba(0,0,0,0.68)] text-center"
+        >
+          <p className="text-[11px] font-semibold text-[#9CB8FF] leading-tight">
+            {hoveredWord.vocab.word}
+          </p>
+          <p lang="si" className="text-sm font-bold font-sinhala text-[#FFFFFF] mt-0.5 leading-snug">
+            {hoveredWord.vocab.sinhalaMeaning}
+          </p>
         </div>
       )}
 

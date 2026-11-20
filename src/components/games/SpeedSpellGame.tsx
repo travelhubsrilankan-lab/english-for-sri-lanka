@@ -124,10 +124,12 @@ export const SpeedSpellGame: React.FC<SpeedSpellGameProps> = ({
     soundEffects.playClick();
     if (vocabPool.length === 0) return;
 
-    const shuffled = [...vocabPool].sort(() => Math.random() - 0.5);
+    const singleWordPool = vocabPool.filter((v) => /^[a-zA-Z]{2,14}$/.test(v.word.trim()));
+    const sourcePool = singleWordPool.length > 0 ? singleWordPool : vocabPool;
+    const shuffled = [...sourcePool].sort(() => Math.random() - 0.5);
     const selected = shuffled.slice(0, 15).map((vocab) => ({
       vocab,
-      letterBank: shuffleLetters(vocab.word),
+      letterBank: shuffleLetters(vocab.word.replace(/\s+/g, '')),
     }));
 
     scoreRef.current = 0;

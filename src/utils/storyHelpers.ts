@@ -82,6 +82,39 @@ function buildVocabLookup(vocabulary: StoryVocabularyItem[]): Map<string, Vocabu
   return map;
 }
 
+const IRREGULAR_BASE_MAP: Record<string, string> = {
+  gave: 'give',
+  given: 'give',
+  went: 'go',
+  gone: 'go',
+  saw: 'see',
+  seen: 'see',
+  heard: 'hear',
+  took: 'take',
+  taken: 'take',
+  found: 'find',
+  became: 'become',
+  said: 'say',
+  knew: 'know',
+  known: 'know',
+  ran: 'run',
+  made: 'make',
+  came: 'come',
+  kept: 'keep',
+  won: 'win',
+  ate: 'eat',
+  drank: 'drink',
+  brought: 'bring',
+  thought: 'think',
+  told: 'tell',
+  wrote: 'write',
+  read: 'read',
+  spent: 'spend',
+  began: 'begin',
+  grew: 'grow',
+  held: 'hold',
+};
+
 function findMatchingVocab(
   cleanedToken: string,
   lookup: Map<string, VocabularyWord>
@@ -90,14 +123,23 @@ function findMatchingVocab(
   const exact = lookup.get(cleanedToken);
   if (exact) return exact;
 
+  const irregularBase = IRREGULAR_BASE_MAP[cleanedToken];
+  if (irregularBase && lookup.has(irregularBase)) {
+    return lookup.get(irregularBase);
+  }
+
   // Match simple plural / verb endings back to base vocabulary word
   for (const [key, vocab] of lookup.entries()) {
+    const stemY = key.endsWith('y') ? key.slice(0, -1) : null;
+    const stemE = key.endsWith('e') ? key.slice(0, -1) : null;
     if (
       cleanedToken === `${key}s` ||
       cleanedToken === `${key}es` ||
       cleanedToken === `${key}ed` ||
       cleanedToken === `${key}ing` ||
-      cleanedToken === `${key}d`
+      cleanedToken === `${key}d` ||
+      (stemY && (cleanedToken === `${stemY}ied` || cleanedToken === `${stemY}ies`)) ||
+      (stemE && cleanedToken === `${stemE}ing`)
     ) {
       return vocab;
     }
@@ -110,19 +152,66 @@ export function tokenizeSentenceText(
   vocabulary: StoryVocabularyItem[]
 ): StoryWordToken[] {
   const lookup = buildVocabLookup(vocabulary);
-  return englishText
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((displayWord) => {
-      const cleanWord = displayWord
-        .replace(/^[“"‘'(`—–-]+|[”"’'.,!?;:)—–-]+$/g, '')
-        .toLowerCase();
-      return {
-        cleanWord,
-        displayWord,
-        vocab: findMatchingVocab(cleanWord, lookup),
-      };
+  const rawTokens = englishText.split(/\s+/).filter(Boolean);
+  const cleanTokens = rawTokens.map((t) =>
+    t.replace(/^[“"‘'(`—–-]+|[”"’'.,!?;:)—–-]+$/g, '').toLowerCase()
+  );
+
+  // Collect multi-word vocab phrases (longest first)
+  const multiWordKeys = Array.from(lookup.keys())
+    .filter((k) => k.includes(' '))
+    .sort((a, b) => b.split(' ').length - a.split(' ').length);
+
+  const result: StoryWordToken[] = [];
+  let i = 0;
+
+  while (i < rawTokens.length) {
+    let matchedPhrase: { length: number; vocab: VocabularyWord } | null = null;
+
+    for (const phraseKey of multiWordKeys) {
+      const phraseParts = phraseKey.split(' ');
+      if (i + phraseParts.length > rawTokens.length) continue;
+
+      const slice = cleanTokens.slice(i, i + phraseParts.length);
+      const isMatch = phraseParts.every((part, idx) => {
+        const tok = slice[idx];
+        if (tok === part) return true;
+        if (idx === 0 && IRREGULAR_BASE_MAP[tok] === part) return true;
+        if (idx === phraseParts.length - 1) {
+          return tok === `${part}s` || tok === `${part}es` || tok === `${part}ed`;
+        }
+        return false;
+      });
+
+      if (isMatch) {
+        matchedPhrase = { length: phraseParts.length, vocab: lookup.get(phraseKey)! };
+        break;
+      }
+    }
+
+    if (matchedPhrase) {
+      const combinedDisplay = rawTokens.slice(i, i + matchedPhrase.length).join(' ');
+      const combinedClean = cleanTokens.slice(i, i + matchedPhrase.length).join(' ');
+      result.push({
+        cleanWord: combinedClean,
+        displayWord: combinedDisplay,
+        vocab: matchedPhrase.vocab,
+      });
+      i += matchedPhrase.length;
+      continue;
+    }
+
+    const displayWord = rawTokens[i];
+    const cleanWord = cleanTokens[i];
+    result.push({
+      cleanWord,
+      displayWord,
+      vocab: findMatchingVocab(cleanWord, lookup),
     });
+    i += 1;
+  }
+
+  return result;
 }
 
 export function extractStorySentences(story: Story): StorySentence[] {

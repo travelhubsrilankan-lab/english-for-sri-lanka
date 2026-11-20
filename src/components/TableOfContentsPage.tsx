@@ -659,21 +659,6 @@ export const TableOfContentsPage: React.FC<TableOfContentsPageProps> = ({
               })}
             </div>
           </div>
-
-          {stories.length === 0 ? (
-            renderFriendlyEmptyState(false)
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-[rgba(165,180,252,0.14)] pb-3">
-                <h2 className="text-sm font-semibold text-[#E2E8F0]">
-                  All Stories ({stories.length})
-                </h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {stories.map((story, idx) => renderStoryCard(story, idx))}
-              </div>
-            </div>
-          )}
         </section>
       ) : (
         /* VIEW 3: Inside a Selected Category */
